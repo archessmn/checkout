@@ -10,9 +10,12 @@
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
+import { OpenApiMeta } from "trpc-openapi";
 
-import { getServerAuthSession } from "@/server/auth";
+import { getPagesServerAuthSession, getServerAuthSession } from "@/server/auth";
 import { db } from "@/server/db";
+import { CreateNextContextOptions } from "@trpc/server/adapters/next";
+import { Session } from "next-auth";
 
 /**
  * 1. CONTEXT
@@ -26,6 +29,11 @@ import { db } from "@/server/db";
  *
  * @see https://trpc.io/docs/server/context
  */
+
+interface CreateContextOptions {
+  session: Session | null;
+}
+
 export const createTRPCContext = async (opts: { headers: Headers }) => {
   const session = await getServerAuthSession();
 
@@ -36,6 +44,26 @@ export const createTRPCContext = async (opts: { headers: Headers }) => {
   };
 };
 
+const createInnerPagesTRPCContext = (opts: CreateContextOptions) => {
+  return {
+    session: opts.session,
+    db,
+  };
+};
+
+export const createPagesTRPCContext = async (
+  opts: CreateNextContextOptions,
+) => {
+  const { req, res } = opts;
+
+  // Get the session from the server using the getServerSession wrapper function
+  const session = await getPagesServerAuthSession({ req, res });
+
+  return createInnerPagesTRPCContext({
+    session,
+  });
+};
+
 /**
  * 2. INITIALIZATION
  *
@@ -43,19 +71,22 @@ export const createTRPCContext = async (opts: { headers: Headers }) => {
  * ZodErrors so that you get typesafety on the frontend if your procedure fails due to validation
  * errors on the backend.
  */
-const t = initTRPC.context<typeof createTRPCContext>().create({
-  transformer: superjson,
-  errorFormatter({ shape, error }) {
-    return {
-      ...shape,
-      data: {
-        ...shape.data,
-        zodError:
-          error.cause instanceof ZodError ? error.cause.flatten() : null,
-      },
-    };
-  },
-});
+const t = initTRPC
+  .meta<OpenApiMeta>()
+  .context<typeof createTRPCContext | typeof createPagesTRPCContext>()
+  .create({
+    transformer: superjson,
+    errorFormatter({ shape, error }) {
+      return {
+        ...shape,
+        data: {
+          ...shape.data,
+          zodError:
+            error.cause instanceof ZodError ? error.cause.flatten() : null,
+        },
+      };
+    },
+  });
 
 /**
  * 3. ROUTER & PROCEDURE (THE IMPORTANT BIT)

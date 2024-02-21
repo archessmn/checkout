@@ -24,6 +24,7 @@ model Post {
     createdById String
 
     @@index([name])
+    @@map("posts")
 }
 
 // Necessary for Next auth
@@ -43,6 +44,7 @@ model Account {
     user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
     @@unique([provider, providerAccountId])
+    @@map("accounts")
 }
 
 model Session {
@@ -51,6 +53,8 @@ model Session {
     userId       String
     expires      DateTime
     user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    
+    @@map("sessions")
 }
 
 model User {
@@ -62,6 +66,11 @@ model User {
     accounts      Account[]
     sessions      Session[]
     posts         Post[]
+    createdModules  Module[]
+    createdDepartments  Department[]
+    createdActivities   Activity[]
+
+    @@map("users")
 }
 
 model VerificationToken {
@@ -70,4 +79,68 @@ model VerificationToken {
     expires    DateTime
 
     @@unique([identifier, token])
+    @@map("verification_tokens")
+}
+
+model Module {
+    id          String      @id @default(cuid())
+    code        String
+    description String?
+
+    departmentId    String
+    createdById String
+    createdBy   User   @relation(fields: [createdById], references: [id])
+    department  Department? @relation(fields: [departmentId], references: [id])
+    activities  Activity[]
+
+    @@map("modules")
+}
+
+model Department {
+    id          String      @id @default(cuid())
+    name        String
+    createdById String
+    createdBy   User   @relation(fields: [createdById], references: [id])
+    modules     Module[]
+    activities  Activity[]
+
+    @@map("departments")
+}
+
+model Activity {
+    id          String      @id @default(cuid())
+    description String
+    startWeek   String
+    startDateTime   DateTime
+    endDateTime     DateTime
+    duration    String
+    type        String
+    staff       String?
+    location    String
+    size        Int?
+    reference   String
+    details     String?
+
+    moduleId    String
+    departmentId    String
+    createdById String
+
+    module      Module?      @relation(fields: [moduleId], references: [id])
+    department  Department?  @relation(fields: [departmentId], references: [id])
+    createdBy   User   @relation(fields: [createdById], references: [id])
+
+    checkinCodes    CheckinCode[]   @relation()
+
+    @@map("activities")
+}
+
+model CheckinCode {
+    id          String      @id @default(cuid())
+    code        Int
+    score       Int         @default(0)
+    submittedAt DateTime?   @default(now())
+    activityId  String
+    activity    Activity    @relation(fields: [activityId], references: [id])
+
+    @@map("checkin_codes")
 }

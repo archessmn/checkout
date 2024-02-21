@@ -8,8 +8,10 @@ import {
 
 export const postRouter = createTRPCRouter({
   hello: publicProcedure
+    .meta({ openapi: { method: "GET", path: "/test" } })
     .input(z.object({ text: z.string() }))
-    .query(({ input }) => {
+    .output(z.object({ greeting: z.string() }))
+    .mutation(({ input }) => {
       return {
         greeting: `Hello ${input.text}`,
       };
@@ -39,4 +41,16 @@ export const postRouter = createTRPCRouter({
   getSecretMessage: protectedProcedure.query(() => {
     return "you can now see this secret message!";
   }),
+
+  getMessage: protectedProcedure
+    .meta({
+      /* 👉 */ openapi: { method: "GET", path: "/test2" },
+    })
+    .input(z.void())
+    .output(z.any())
+    .query(() => {
+      return {
+        text: "Hello",
+      };
+    }),
 });
