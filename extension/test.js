@@ -109,7 +109,7 @@ async function codeSubmitted(code) {
     ).json();
 
     if (!highestCode.ok) {
-      alertNoCodes();
+      alertNotieInput("No codes available just yet");
       return;
     }
 
@@ -140,16 +140,21 @@ async function codeSubmitted(code) {
   }
 }
 
-function alertNoCodes() {
-  const text = $("notie-input-text").text();
+// Should flash a message when submitting a code if you have entered a code that
+// checkin won't accept, and the backend hasn't received any codes for that
+// activity. As of writing this it is untested
+function alertNotieInput(alertText = "An error occurred") {
+  const text = $("#notie-input-text").text();
   $("#notie-input-inner").css("background-color", "red");
-  $("notie-input-text").text("No codes available just yet");
+  $("#notie-input-text").text(alertText);
   setTimeout(() => {
     $("#notie-input-inner").css("background-color", "rgb(0, 168, 255)");
-    $("notie-input-text").text(text);
+    $("#notie-input-text").text(text);
   }, 1500);
 }
 
+// This function handles replacing the UI elements that checkin uses, allowing
+// the script to intercept code submission by mimicking said elements
 function onPageReady() {
   $("div.selfregistration_status_undetermined").addClass("hidden");
   $(".text-block").append(`
@@ -190,3 +195,5 @@ function onPageReady() {
     codeSubmitted($("#checkout-input-field").val());
   });
 }
+
+$(onPageReady);
