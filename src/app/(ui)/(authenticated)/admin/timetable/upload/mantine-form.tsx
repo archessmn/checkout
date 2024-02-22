@@ -52,7 +52,11 @@ export function TimetableUploadForm() {
               file: text,
             });
             notifications.show({
-              message: "Bottom Text.",
+              title: "Success",
+              message:
+                result.count > 0
+                  ? `Added ${result.count} new events.`
+                  : "No new events added",
             });
           }
         }}

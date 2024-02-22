@@ -3,7 +3,7 @@
 import { AppShell, Burger, Group, NavLink } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { ThemeSwitcher } from "../theme-switcher";
-import { LuCalendar, LuHome, LuWrench } from "react-icons/lu";
+import { LuBook, LuCalendar, LuHome, LuWrench } from "react-icons/lu";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { getSession } from "next-auth/react";
@@ -13,10 +13,6 @@ export function GenericAppShell(props: { children: React.ReactNode }) {
   const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
   const [desktopOpened, { toggle: toggleDesktop }] = useDisclosure(true);
   const pathname = usePathname();
-
-  // const session = use(getSession());
-
-  // console.log(session?.user);
 
   return (
     <AppShell
@@ -62,6 +58,14 @@ export function GenericAppShell(props: { children: React.ReactNode }) {
           label="Timetable"
           onClick={toggleMobile}
           active={pathname === "/timetable"}
+        />
+        <NavLink
+          component={Link}
+          href={"/modules"}
+          leftSection={<LuBook size="1rem" />}
+          label="Modules"
+          onClick={toggleMobile}
+          active={pathname?.startsWith("/modules")}
         />
         <NavLink
           component={Link}

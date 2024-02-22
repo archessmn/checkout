@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { string, z } from "zod";
 
 import {
   createTRPCRouter,
@@ -7,53 +7,34 @@ import {
 } from "@/server/api/trpc";
 import moment from "moment";
 import { activitySchema } from "../schemas/activity";
+import { ModuleGroup } from "@prisma/client";
+import { db } from "@/server/db";
 
 export const activityRouter = createTRPCRouter({
   getCode: publicProcedure
-    .meta({ openapi: { method: "POST", path: "/activity/code" } })
+    .meta({ openapi: { method: "GET", path: "/activity/code" } })
     .input(activitySchema.getCode.input)
     .output(activitySchema.getCode.output)
     .query(async ({ ctx, input }) => {
-      const now = new Date();
-
-      const currentActivity = await ctx.db.activity.findFirst({
-        where: {
-          startDateTime: {
-            lte: now,
-          },
-          endDateTime: {
-            gte: now,
-          },
-          reference: {
-            contains: input.activity,
-          },
-          location: {
-            contains: input.space,
-          },
-        },
-      });
-
       const code = await ctx.db.checkinCode.findFirst({
         orderBy: {
           score: "desc",
         },
         where: {
-          activityId: currentActivity?.id,
+          activityId: input.activityId,
         },
       });
 
       if (code) {
         return {
-          id: input.id,
+          ok: true,
           code: code.code,
-          activityId: currentActivity!.id,
         };
       }
 
       return {
-        id: input.id,
-        code: -1,
-        activityId: null,
+        ok: false,
+        code: null,
       };
     }),
 
@@ -64,22 +45,7 @@ export const activityRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const now = new Date();
 
-      const currentActivity = await ctx.db.activity.findFirst({
-        where: {
-          startDateTime: {
-            lte: now,
-          },
-          endDateTime: {
-            gte: now,
-          },
-          reference: {
-            contains: input.activity,
-          },
-          location: {
-            contains: input.space,
-          },
-        },
-      });
+      const currentActivity = await getActivityFromExternalInput(input);
 
       if (currentActivity) {
         return {
@@ -129,6 +95,41 @@ export const activityRouter = createTRPCRouter({
           });
         }
 
+        let weekName = await ctx.db.weekName.findFirst({
+          where: { name: activity.startWeek },
+        });
+
+        if (!weekName) {
+          weekName = await ctx.db.weekName.create({
+            data: {
+              name: activity.startWeek,
+            },
+          });
+        }
+
+        let groupNumber = extractGroupNumber(activity.activityReference);
+
+        let group: ModuleGroup | undefined = undefined;
+
+        if (groupNumber) {
+          group =
+            (await ctx.db.moduleGroup.findFirst({
+              where: {
+                groupNumber,
+                moduleId: moduleBeans.id,
+              },
+            })) ?? undefined;
+
+          if (!group) {
+            group = await ctx.db.moduleGroup.create({
+              data: {
+                groupNumber,
+                module: { connect: { id: moduleBeans.id } },
+              },
+            });
+          }
+        }
+
         const startDateTime = new Date(
           `${activity.startDate} ${activity.startTime}`,
         );
@@ -147,7 +148,6 @@ export const activityRouter = createTRPCRouter({
           await ctx.db.activity.create({
             data: {
               description: activity.description,
-              startWeek: activity.startWeek,
               startDateTime,
               endDateTime,
               duration: activity.duration,
@@ -161,6 +161,8 @@ export const activityRouter = createTRPCRouter({
               module: { connect: { id: moduleBeans.id } },
               department: { connect: { id: department.id } },
               createdBy: { connect: { id: ctx.session.user.id } },
+              weekName: { connect: { id: weekName.id } },
+              group: group ? { connect: { id: group.id } } : undefined,
             },
           });
 
@@ -176,11 +178,22 @@ export const activityRouter = createTRPCRouter({
 
   create: protectedProcedure
     .input(activitySchema.create.input)
-    .mutation(({ ctx, input }) => {
+    .mutation(async ({ ctx, input }) => {
+      let weekName = await ctx.db.weekName.findFirst({
+        where: { name: input.startWeek },
+      });
+
+      if (!weekName) {
+        weekName = await ctx.db.weekName.create({
+          data: {
+            name: input.startWeek,
+          },
+        });
+      }
+
       return ctx.db.activity.create({
         data: {
           description: input.description,
-          startWeek: input.startWeek,
           startDateTime: input.startDateTime,
           endDateTime: input.endDateTime,
           duration: input.duration,
@@ -193,6 +206,7 @@ export const activityRouter = createTRPCRouter({
           module: { connect: { id: input.moduleId } },
           department: { connect: { id: input.departmentId } },
           createdBy: { connect: { id: ctx.session.user.id } },
+          weekName: { connect: { id: weekName.id } },
         },
       });
     }),
@@ -205,17 +219,144 @@ export const activityRouter = createTRPCRouter({
       },
     })
     .input(activitySchema.getDayActivities.input)
-    .output(activitySchema.getDayActivities.output)
+    .output(activitySchema.getDayActivities.filteredOutput)
     .query(async ({ ctx, input }) => {
       const date = moment(input.date).toDate();
       const endDate = moment(input.date).endOf("day").toDate();
-      return await ctx.db.activity.findMany({
+
+      let groupId = input.groupId;
+
+      if (Number(groupId) > 0) {
+        const group = await ctx.db.moduleGroup.findFirst({
+          where: {
+            groupNumber: Number(groupId),
+            moduleId: input.moduleId,
+          },
+        });
+
+        groupId = group?.id ?? groupId;
+      }
+
+      const dayActivities = await ctx.db.activity.findMany({
         where: {
           startDateTime: {
             gte: date,
             lte: endDate,
           },
+          groupId,
+          moduleId: input.moduleId,
+        },
+        select: {
+          id: true,
+          description: true,
+          startDateTime: true,
+          endDateTime: true,
+          type: true,
+          reference: true,
+          weekName: {
+            select: {
+              name: true,
+            },
+          },
+          group: {
+            select: {
+              id: true,
+              groupNumber: true,
+            },
+          },
+          checkinCodes: {
+            select: {
+              id: true,
+              code: true,
+              score: true,
+            },
+            orderBy: {
+              score: "desc",
+            },
+          },
+          module: {
+            select: {
+              id: true,
+              code: true,
+              description: true,
+              department: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
         },
       });
+
+      return dayActivities;
+    }),
+
+  getIdExternal: publicProcedure
+    .meta({ openapi: { method: "POST", path: "/activity/id-external" } })
+    .input(
+      z.object({
+        time: z.string(),
+        activity: z.string(),
+        lecturer: z.string(),
+        space: z.string(),
+      }),
+    )
+    .output(z.object({ ok: z.boolean(), activityId: z.string().nullable() }))
+    .query(async ({ ctx, input }) => {
+      const currentActivity = await getActivityFromExternalInput(input);
+
+      if (currentActivity) {
+        return {
+          ok: true,
+          activityId: currentActivity.id,
+        };
+      }
+
+      return {
+        ok: false,
+        activityId: null,
+      };
     }),
 });
+
+function extractGroupNumber(reference: string): number | null {
+  let groupNum: number | null = null;
+
+  if (reference.includes(" Grp ")) {
+    const splitReference = reference.split(" ");
+
+    groupNum =
+      Number(splitReference[splitReference.indexOf("Grp") + 1]) ?? null;
+
+    groupNum = groupNum > 0 ? groupNum : null;
+  }
+
+  return groupNum;
+}
+
+async function getActivityFromExternalInput(input: {
+  activity: string;
+  space: string;
+}) {
+  const now = new Date();
+
+  const currentActivity = await db.activity.findFirst({
+    where: {
+      startDateTime: {
+        lte: now,
+      },
+      endDateTime: {
+        gte: now,
+      },
+      reference: {
+        contains: input.activity,
+      },
+      location: {
+        contains: input.space,
+      },
+    },
+  });
+
+  return currentActivity;
+}

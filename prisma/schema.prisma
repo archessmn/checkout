@@ -89,9 +89,12 @@ model Module {
 
     departmentId    String
     createdById String
+
     createdBy   User   @relation(fields: [createdById], references: [id])
     department  Department? @relation(fields: [departmentId], references: [id])
+
     activities  Activity[]
+    groups      ModuleGroup[]
 
     @@map("modules")
 }
@@ -110,7 +113,6 @@ model Department {
 model Activity {
     id          String      @id @default(cuid())
     description String
-    startWeek   String
     startDateTime   DateTime
     endDateTime     DateTime
     duration    String
@@ -121,13 +123,17 @@ model Activity {
     reference   String
     details     String?
 
-    moduleId    String
-    departmentId    String
+    moduleId    String?
+    departmentId    String?
     createdById String
+    weekNameId  String?
+    groupId     String?
 
-    module      Module?      @relation(fields: [moduleId], references: [id])
-    department  Department?  @relation(fields: [departmentId], references: [id])
-    createdBy   User   @relation(fields: [createdById], references: [id])
+    module      Module?         @relation(fields: [moduleId], references: [id])
+    department  Department?     @relation(fields: [departmentId], references: [id])
+    createdBy   User            @relation(fields: [createdById], references: [id])
+    weekName    WeekName?       @relation(fields: [weekNameId], references: [id])
+    group       ModuleGroup?   @relation(fields: [groupId], references: [id])
 
     checkinCodes    CheckinCode[]   @relation()
 
@@ -136,11 +142,33 @@ model Activity {
 
 model CheckinCode {
     id          String      @id @default(cuid())
-    code        Int
+    code        String
     score       Int         @default(0)
     submittedAt DateTime?   @default(now())
     activityId  String
     activity    Activity    @relation(fields: [activityId], references: [id])
 
     @@map("checkin_codes")
+}
+
+model WeekName {
+    id          String      @id @default(cuid())
+    name        String
+
+    activities  Activity[]
+
+    @@map("week_names")
+}
+
+model ModuleGroup {
+    id          String      @id @default(cuid())
+    groupNumber Int
+    
+    moduleId    String
+
+    module      Module      @relation(fields: [moduleId], references: [id])
+
+    activities  Activity[]
+
+    @@map("module_groups")
 }

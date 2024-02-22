@@ -39,16 +39,11 @@ const csvHeaders = [
 
 const getCode = {
   input: z.object({
-    id: z.preprocess((value) => Number(value), z.number()),
-    activity: z.string(),
-    lecturer: z.string().optional(),
-    space: z.string(),
-    time: z.string(),
+    activityId: z.string().optional(),
   }),
   output: z.object({
-    id: z.number(),
-    code: z.number(),
-    activityId: z.string().nullable(),
+    ok: z.boolean(),
+    code: z.string().nullable(),
   }),
 };
 
@@ -133,7 +128,11 @@ const create = {
 };
 
 const getDayActivities = {
-  input: z.object({ date: z.string() }),
+  input: z.object({
+    date: z.string(),
+    groupId: z.string().optional(),
+    moduleId: z.string().optional(),
+  }),
   output: z.array(
     z.object({
       id: z.string(),
@@ -150,6 +149,46 @@ const getDayActivities = {
       details: z.string().nullable(),
       moduleId: z.string().optional(),
       departmentId: z.string().optional(),
+    }),
+  ),
+  filteredOutput: z.array(
+    z.object({
+      id: z.string(),
+      description: z.string(),
+      startDateTime: z.date(),
+      endDateTime: z.date(),
+      type: z.string(),
+      reference: z.string(),
+      weekName: z
+        .object({
+          name: z.string(),
+        })
+        .nullable(),
+      group: z
+        .object({
+          id: z.string(),
+          groupNumber: z.number(),
+        })
+        .nullable(),
+      checkinCodes: z.array(
+        z.object({
+          id: z.string(),
+          code: z.string(),
+          score: z.number(),
+        }),
+      ),
+      module: z
+        .object({
+          id: z.string(),
+          code: z.string(),
+          description: z.string().nullable(),
+          department: z
+            .object({
+              name: z.string(),
+            })
+            .nullable(),
+        })
+        .nullable(),
     }),
   ),
 };
