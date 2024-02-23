@@ -21,37 +21,31 @@ function getPageActivities() {
 }
 
 async function getIdFromActivity(input) {
-  const response = await fetch(
-    `https://checkout.theshrine.net/api/activity/id-external`,
-    {
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      method: "POST",
-      body: JSON.stringify(input),
-      mode: "cors",
+  const response = await fetch(`${env.PUBLIC_URL}/api/activity/id-external`, {
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
     },
-  );
+    method: "POST",
+    body: JSON.stringify(input),
+    mode: "cors",
+  });
 
   return response.json();
 }
 
 async function getHighestCode(activityId) {
-  return fetch(
-    `https://checkout.theshrine.net/api/activity/code?activityId=${activityId}`,
-    {
-      headers: {
-        Accept: "application/json",
-      },
-      method: "GET",
-      mode: "cors",
+  return fetch(`${env.PUBLIC_URL}/api/activity/code?activityId=${activityId}`, {
+    headers: {
+      Accept: "application/json",
     },
-  );
+    method: "GET",
+    mode: "cors",
+  });
 }
 
 async function submitCode({ code, accepted, activityId }) {
-  return fetch(`https://checkout.theshrine.net/api/code/submit`, {
+  return fetch(`${env.PUBLIC_URL}/api/code/submit`, {
     headers: {
       Accept: "application/json",
       "Content-Type": "application/json",
