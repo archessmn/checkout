@@ -254,9 +254,26 @@ async function preInput(localId, backendId) {
         </div>
       `);
     }
+
+    $(".checkout-modal-content").append(`
+        <div style="display: flex; padding-left: 16px; padding-right: 16px; align-items: center;${codes.codes.indexOf(code) % 2 == 1 ? " background-color: rgb(240, 240, 240);" : ""}">
+          <hr>
+          <button type="button" style="margin-left: auto;" class="btn btn-success selfregistration-code-own" data-targetstatus="checkout">
+            Bring your own
+          </button>
+        </div>
+      `);
+
     $(".selfregistration-code-send").on("click", (event) => {
       const code = event.target.dataset.code;
       return codeSubmitted(code, localId, backendId, true);
+    });
+
+    $(".selfregistration-code-own").on("click", (event) => {
+      $(".selfregistration-changestatus").trigger("click");
+      alertNotieInput("Suit yourself :3");
+      hideCheckoutModal();
+      clearCheckoutModal();
     });
   } else {
     $(".selfregistration-changestatus").trigger("click");
@@ -320,7 +337,7 @@ async function onPageReady() {
 
       <div class="checkout-modal-content">
         <span class="checkout-modal-close">&times;</span>
-        <p>Some text in the Modal..</p>
+        <h4 style="margin-top: 9.6px; margin-bottom: 9.6px;"><strong>Available Codes</strong></h4>
         <hr style="margin-top: 12.8px; margin-bottom: 19.2px;">
       </div>
     </div>
@@ -371,18 +388,22 @@ async function onPageReady() {
 
   $(".selfregistration-checkout").on("click", (event) => {
     console.log("Checkout time");
-    preInput(
-      event.target.closest("section[data-activities-id]").dataset.activitiesId,
-      event.target.dataset.activityId,
-    );
+
+    const activitiesId = event.target.closest("section[data-activities-id]")
+      .dataset.activitiesId;
+    const backendId = event.target.dataset.activityId;
+
+    $("#checkout-input-field").attr("data-activities-id", activitiesId);
+    $("#checkout-input-field").attr("data-backend-id", backendId);
+    preInput(activitiesId, backendId);
   });
 
   $("#checkout-input-field").on("keypress", async (e) => {
     if (e.keyCode == 13) {
       codeSubmitted(
         $("#checkout-input-field").val(),
-        activities[0].id,
-        activityId.activityId,
+        $("#checkout-input-field").attr("data-activities-id"),
+        $("#checkout-input-field").attr("data-backend-id"),
       );
     }
   });
@@ -397,9 +418,45 @@ async function onPageReady() {
   $("#checkout-input-yes").on("click", () => {
     codeSubmitted(
       $("#checkout-input-field").val(),
-      activities[0].id,
-      activityId.activityId,
+      $("#checkout-input-field").attr("data-activities-id"),
+      $("#checkout-input-field").attr("data-backend-id"),
     );
+  });
+
+  var ctrlPressed = false;
+  $(document)
+    .keydown(function (e) {
+      if (e.ctrlKey) {
+        ctrlPressed = true;
+      }
+    })
+    .keyup(function (e) {
+      if (e.ctrlKey) {
+        ctrlPressed = false;
+      }
+    });
+
+  var shiftPressed = false;
+  $(document)
+    .keydown(function (e) {
+      if (e.shiftKey) {
+        shiftPressed = true;
+      }
+    })
+    .keyup(function (e) {
+      if (e.shiftKey) {
+        shiftPressed = false;
+      }
+    });
+
+  $(document).keydown(function (e) {
+    if (e.which == 76) {
+      if (ctrlPressed == true && shiftPressed == true) {
+        console.log("Autofill keybind pressed");
+        ctrlPressed = false;
+        shiftPressed = false;
+      }
+    }
   });
 }
 

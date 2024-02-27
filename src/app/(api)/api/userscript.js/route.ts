@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   const file = await fs.readFile(
-    process.cwd() + "/public/api/extension-template.js",
+    process.cwd() + "/public/api/userscript-template.js",
     "utf8",
   );
 
