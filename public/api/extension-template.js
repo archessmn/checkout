@@ -71,18 +71,7 @@ async function getAciCodes(activityId) {
   );
 
   const aciCodesResponse = await fetch(
-    "https://aci-api.ashhhleyyy.dev/api/codes/query?date=Monday%2026%20February&time=17%3A30%20-%2018%3A30&activity=Lecture%201&space=PZA%2F103%20Lecture%20Theatre",
-    {
-      credentials: "omit",
-      headers: {
-        Accept: "application/json",
-        "Accept-Language": "en-US,en;q=0.5",
-        Pragma: "no-cache",
-        "Cache-Control": "no-cache",
-      },
-      referrer: "https://aci-api.ashhhleyyy.dev/docs",
-      method: "GET",
-    },
+    "https://aci-api.ashhhleyyy.dev/api/codes",
   );
 
   const aciCodes = await aciCodesResponse.json();
@@ -90,43 +79,52 @@ async function getAciCodes(activityId) {
   console.log(aciCodes);
 }
 
+// Fetches currently active sessions and their codes from rejectdopamine.com
+// then filters them to find the session the user is checking in to, parses
+// and returns the codes in a format consistent with the rest of the program
 async function getRejectCodes(activityId) {
+  // Gets the activity id of the closest section containing the Checkout
+  // button clicked by the user based on the backend ID of that activity
   const localId = $(
     `.selfregistration-checkout[data-activity-id="${activityId}"]`,
   )
-    .closest("section[data-activities-id]:first")
+    .closest("section")
     .attr("data-activities-id");
 
   const localActivity = getPageActivities().find(
-    (activity) => activity.id == 2816207,
-    // (activity) => activity.id == localId,
+    (activity) => activity.id == localId,
   );
 
-  const rejectCodesResponse = await fetch(
-    "https://rejectdopamine.com/api/app/extension/codes",
-    {
-      credentials: "omit",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        Pragma: "no-cache",
-        "Cache-Control": "no-cache",
-      },
-      body: JSON.stringify({
-        date: moment().format("dddd DD MMMM"),
-        time: localActivity.time,
-        space: localActivity.space,
-        activity: localActivity.activity,
-      }),
-      method: "POST",
-    },
-  );
+  // Make the request to rejectdopamine
+  const rejectCodes = await (
+    await fetch("https://rejectdopamine.com/api/app/active/yrk/cs/1")
+  ).json();
 
-  const aciCodes = await aciCodesResponse.json();
+  let finalCodes = [];
 
-  console.log(aciCodes);
+  if (rejectCodes.sessionCount > 0) {
+    // Get the wanted activity from rejectdopamines active sessions
+    const rejectActivity = rejectCodes.sessions.find((activity) => {
+      return (
+        activity.description.includes(localActivity.activity) &&
+        localActivity.time == `${activity.startTime} - ${activity.endTime}`
+      );
+    });
+
+    if (!rejectActivity) {
+      return finalCodes;
+    }
+
+    rejectActivity.codes.map((code) => {
+      finalCodes.push({ code: `${code.checkinCode}`, score: code.count });
+    });
+  }
+
+  return finalCodes;
 }
 
+// Submits a code to the backend that provides this script, could also be adapted
+// to send to RD but that's an issue for a later date.
 async function submitCode({ code, accepted, activityId }) {
   return fetch(`${env.PUBLIC_URL}/api/code/submit`, {
     headers: {
@@ -143,6 +141,7 @@ async function submitCode({ code, accepted, activityId }) {
   });
 }
 
+// Sends the code to checkin to mark the user as present (hopefully)
 async function sendCheckinCode(code, id) {
   const csrfToken = $('head > meta[name="csrf-token"]').attr("content");
 
@@ -173,14 +172,6 @@ async function sendCheckinCode(code, id) {
 }
 
 async function codeSubmitted(code, localId, backendId, skipCodeFetch) {
-  // console.log("Submitting code:");
-  // console.log(code);
-  // console.log(localId);
-  // console.log(backendId);
-  // console.log(skipCodeFetch);
-
-  // return;
-
   let checkoutCode = code;
 
   if (code.toString().length !== 6 && !skipCodeFetch) {
@@ -215,6 +206,7 @@ async function codeSubmitted(code, localId, backendId, skipCodeFetch) {
   }
 }
 
+// Does some funky UI stuff to provide feedback when checkin code is accepted
 function checkedOut() {
   $(".selfregistration_checkout").addClass("hidden");
   $(".selfregistration_status_present>div:last-child").text("Checked Out!");
@@ -226,7 +218,8 @@ function checkedOut() {
 }
 
 async function preInput(localId, backendId) {
-  // Autofilled by the backend before being sent
+  // Autofilled by the backend before being sent to client, allows backend to set
+  // whether or not autofill is enabled but can be overriden client side
   const AUTOFILL_ENABLED = env.AUTOFILL_ENABLED;
 
   if (AUTOFILL_ENABLED == true) {
@@ -240,6 +233,33 @@ async function preInput(localId, backendId) {
   }
 
   const codes = await (await getAllCodes(backendId)).json();
+
+  let finalCodes = codes.codes;
+
+  const rejectCodes = await getRejectCodes(backendId);
+
+  // const devCodes = rejectCodes.concat([
+  //   { code: "696969", score: 2 },
+  //   { code: "696968", score: 0 },
+  //   { code: "862885", score: 3 },
+  // ]);
+
+  rejectCodes.map((rc) => {
+    const exisitingCode = finalCodes.find((code) => code.code == rc.code);
+
+    if (exisitingCode) {
+      finalCodes[finalCodes.indexOf(exisitingCode)].score += rc.score;
+    } else {
+      finalCodes.push(rc);
+    }
+  });
+
+  finalCodes = finalCodes.sort((one, two) => {
+    return one.score < two.score ? 1 : -1;
+  });
+
+  // console.log(finalCodes);
+
   console.log("Autofill unavailable or disabled, opening input");
   if (codes.codes.length > 0) {
     showCheckoutModal();
@@ -256,7 +276,7 @@ async function preInput(localId, backendId) {
     }
 
     $(".checkout-modal-content").append(`
-        <div style="display: flex; padding-left: 16px; padding-right: 16px; align-items: center;${codes.codes.indexOf(code) % 2 == 1 ? " background-color: rgb(240, 240, 240);" : ""}">
+        <div style="display: flex; padding-left: 16px; padding-right: 16px; align-items: center;">
           <hr>
           <button type="button" style="margin-left: auto;" class="btn btn-success selfregistration-code-own" data-targetstatus="checkout">
             Bring your own
@@ -299,10 +319,12 @@ function showCheckoutModal() {
   $("#checkout-modal").css("display", "block");
 }
 
+// Clears checkout modal
 function clearCheckoutModal() {
   $("#checkout-modal").find("div:not(:first)").remove();
 }
 
+// You guessed it, hides checkout modal
 function hideCheckoutModal() {
   $("#checkout-modal").css("display", "none");
 }
@@ -310,8 +332,15 @@ function hideCheckoutModal() {
 // This function handles replacing the UI elements that checkin uses, allowing
 // the script to intercept code submission by mimicking said elements
 async function onPageReady() {
+  $(".page-title").text(
+    window.innerWidth >= 915
+      ? "Check-In-Out-In-Out-Shake-It-All-About"
+      : "Check-Out",
+  );
+
   const activities = await getPageActivities();
 
+  // Hides all "Present" buttons
   $("div.selfregistration_status_undetermined").addClass("hidden");
 
   for (const activity of activities) {
@@ -341,31 +370,32 @@ async function onPageReady() {
         <hr style="margin-top: 12.8px; margin-bottom: 19.2px;">
       </div>
     </div>
-    <section data-activities-id="testing2">
-      <button type="button" class="btn btn-success selfregistration-checkout" data-targetstatus="checkout" data-activity-id="clsw584dk001pu4l24dj2blj3">
-        <span class="font-icon font-icon-ok"></span>
-        No Codes Demo
-      </button>
-    </section>
-    <section data-activities-id="testing">
-      <button type="button" class="btn btn-success selfregistration-checkout" data-targetstatus="checkout" data-activity-id="clsw584df001ou4l2eeemohob">
-        <span class="font-icon font-icon-ok"></span>
-        One Code Demo
-      </button>
-    </section>
-    <section data-activities-id="testing2">
-      <button type="button" class="btn btn-success selfregistration-checkout" data-targetstatus="checkout" data-activity-id="clsw584b6001bu4l231nlmfct">
-        <span class="font-icon font-icon-ok"></span>
-        Two Codes Demo
-      </button>
-    </section>
   `);
+  // $(".page-content").append(`
+  //   <section data-activities-id="testing0">
+  //     <button type="button" class="btn btn-success selfregistration-checkout" data-targetstatus="checkout" data-activity-id="clsw584dk001pu4l24dj2blj3">
+  //       <span class="font-icon font-icon-ok"></span>
+  //       No Codes Demo
+  //     </button>
+  //   </section>
+  //   <section data-activities-id="testing1">
+  //     <button type="button" class="btn btn-success selfregistration-checkout" data-targetstatus="checkout" data-activity-id="clsw584df001ou4l2eeemohob">
+  //       <span class="font-icon font-icon-ok"></span>
+  //       One Code Demo
+  //     </button>
+  //   </section>
+  //   <section data-activities-id="testing2">
+  //     <button type="button" class="btn btn-success selfregistration-checkout" data-targetstatus="checkout" data-activity-id="clsw584b6001bu4l231nlmfct">
+  //       <span class="font-icon font-icon-ok"></span>
+  //       Two Codes Demo
+  //     </button>
+  //   </section>
+  // `);
 
-  $(
-    `<div id="checkout-input-div" style="box-sizing: border-box; height: 55px; width: 100%; display: block; cursor: default; background-color: rgb(255, 255, 255);">
+  $(`
+    <div id="checkout-input-div" style="box-sizing: border-box; height: 55px; width: 100%; display: block; cursor: default; background-color: rgb(255, 255, 255);">
       <input id="checkout-input-field" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" style="box-sizing: border-box; height: 55px; width: 100%; text-align: center; text-indent: 10px; padding-right: 10px; outline: 0px; border: 0px; font-family: inherit; font-size: 1rem;" type="number" placeholder="Check-In code ######">
-    </div>`,
-  ).insertAfter("#notie-input-div");
+    </div>`).insertAfter("#notie-input-div");
   $("#notie-input-div").addClass("hidden");
 
   // Get the modal
