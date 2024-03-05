@@ -151,14 +151,9 @@ async function sendCheckinCode(code, id) {
       credentials: "include",
       headers: {
         Accept: "application/json, text/javascript, */*; q=0.01",
-        "Accept-Language": "en-GB,en;q=0.5",
         "Content-Type": "application/json; charset=UTF-8",
         "X-Requested-With": "XMLHttpRequest",
-        Pragma: "no-cache",
         "Cache-Control": "no-cache",
-        "Sec-Fetch-Dest": "empty",
-        "Sec-Fetch-Mode": "cors",
-        "Sec-Fetch-Site": "same-origin",
       },
       referrer: "https://checkin.york.ac.uk/selfregistration",
       body: JSON.stringify({

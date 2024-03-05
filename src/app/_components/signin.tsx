@@ -1,14 +1,18 @@
 "use client";
 
+import { Button, Card, Center, Space, Title } from "@mantine/core";
 import { signIn } from "next-auth/react";
 
 export function SignIn() {
   // signIn("kanidm");
 
   return (
-    <>
-      <p>Auth needed</p>
-      <button onClick={() => signIn("kanidm")}>Sign In</button>
-    </>
+    <Center h={"100%"}>
+      <Card>
+        <Title order={2}>Auth needed</Title>
+        <Space h={"lg"} />
+        <Button onClick={() => signIn("kanidm")}>Sign In</Button>
+      </Card>
+    </Center>
   );
 }

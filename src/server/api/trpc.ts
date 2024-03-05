@@ -10,12 +10,12 @@
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
-import { OpenApiMeta } from "trpc-openapi";
+import type { OpenApiMeta } from "trpc-openapi";
 
 import { getPagesServerAuthSession, getServerAuthSession } from "@/server/auth";
 import { db } from "@/server/db";
-import { CreateNextContextOptions } from "@trpc/server/adapters/next";
-import { Session } from "next-auth";
+import type { CreateNextContextOptions } from "@trpc/server/adapters/next";
+import type { Session } from "next-auth";
 
 /**
  * 1. CONTEXT

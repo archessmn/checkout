@@ -8,7 +8,10 @@ export function BackButton() {
   const router = useRouter();
 
   return (
-    <Button onClick={router.back} leftSection={<LuArrowLeft size={"1rem"} />}>
+    <Button
+      onClick={() => router.back()}
+      leftSection={<LuArrowLeft size={"1rem"} />}
+    >
       Back
     </Button>
   );

@@ -3,7 +3,10 @@ import { promises as fs } from "fs";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const download = searchParams.get("download");
+
   const file = await fs.readFile(
     process.cwd() + "/public/api/userscript-template.js",
     "utf8",
@@ -16,6 +19,8 @@ export async function GET() {
     {
       headers: {
         "Content-Type": "text/javascript",
+        "Content-Disposition":
+          download == "true" ? "attachment; filename=userscript.js" : "",
         "Cache-Control": "no-store",
       },
     },

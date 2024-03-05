@@ -1,18 +1,16 @@
 import { z } from "zod";
 
-import {
-  createTRPCRouter,
-  protectedProcedure,
-  publicProcedure,
-} from "@/server/api/trpc";
+import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
 
 //TODO Move validators to  ../schemas/code.ts
 export const codeRouter = createTRPCRouter({
   create: publicProcedure
-    .meta({ openapi: { method: "POST", path: "/code/submit" } })
+    .meta({
+      openapi: { method: "POST", path: "/code/submit", tags: ["codes"] },
+    })
     .input(
       z.object({
-        code: z.preprocess((value) => `${value}`, z.string()),
+        code: z.string().nullable(),
         accepted: z.boolean().optional(),
         activityId: z.string(),
       }),
@@ -26,7 +24,11 @@ export const codeRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const now = new Date();
+      if (!input.code) {
+        return {
+          ok: false,
+        };
+      }
 
       // const activity = await ctx.db.activity.findFirst({
       //   where: {
@@ -59,8 +61,8 @@ export const codeRouter = createTRPCRouter({
       // Update score in database if the code has been submitted already
       if (code) {
         let score: number | undefined;
-        if (input.accepted) {
-          score = input.accepted ? 2 : -2;
+        if (input.accepted !== undefined) {
+          score = input.accepted ? 1 : -1;
         }
 
         const updatedCode = await ctx.db.checkinCode.update({
@@ -85,6 +87,7 @@ export const codeRouter = createTRPCRouter({
       const createdCode = await ctx.db.checkinCode.create({
         data: {
           code: inputCodeFormatted,
+          score: 1,
           activity: { connect: { id: input.activityId } },
         },
       });

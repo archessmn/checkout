@@ -1,11 +1,10 @@
 "use client";
 
-import { groupSchema } from "@/server/api/schemas/group";
-import { moduleSchema } from "@/server/api/schemas/module";
+import type { groupSchema } from "@/server/api/schemas/group";
 import { Button, Card, Group, Stack, Text } from "@mantine/core";
 import { usePathname, useRouter } from "next/navigation";
 import { use } from "react";
-import { z } from "zod";
+import type { z } from "zod";
 
 export function ModuleList({
   groupsPromise,

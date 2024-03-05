@@ -1,19 +1,7 @@
 import { api } from "@/trpc/server";
-import {
-  Button,
-  Card,
-  CopyButton,
-  Group,
-  Modal,
-  Stack,
-  Text,
-  UnstyledButton,
-} from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+import { Center, Stack, Title } from "@mantine/core";
 import moment from "moment";
-import { Suspense, useState } from "react";
-import { CodeSubmitForm } from "../../_components/code-submit-form";
-import { notifications } from "@mantine/notifications";
+import { Suspense } from "react";
 import { EventList } from "../../_components/event-list";
 import { LoadingSkeleton } from "@/app/_components/loading";
 import { DayNavigation } from "@/app/_components/day-navigation";
@@ -29,7 +17,14 @@ export default function TimetablePage({
 
   return (
     <Stack>
-      <DayNavigation />
+      <Center>
+        <Title>
+          {moment(searchParams?.date ?? Date()).format("dddd Mo MMMM YYYY")}
+        </Title>
+      </Center>
+      <Center>
+        <DayNavigation />
+      </Center>
       <Suspense fallback={<LoadingSkeleton />}>
         <EventList events={events} />
       </Suspense>

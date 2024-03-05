@@ -1,8 +1,8 @@
+"use client";
+
 import {
-  Card,
   Center,
   CopyButton,
-  Group,
   Kbd,
   Stack,
   Table,

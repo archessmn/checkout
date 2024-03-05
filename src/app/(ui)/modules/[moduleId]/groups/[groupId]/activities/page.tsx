@@ -1,7 +1,7 @@
 import { api } from "@/trpc/server";
 import { Group, Stack } from "@mantine/core";
 import moment from "moment";
-import { Suspense, useState } from "react";
+import { Suspense } from "react";
 import { LoadingSkeleton } from "@/app/_components/loading";
 import { DayNavigation } from "@/app/_components/day-navigation";
 import { EventList } from "@/app/_components/event-list";

@@ -1,22 +1,12 @@
 "use client";
 
-import { z } from "zod";
-import { activitySchema } from "@/server/api/schemas/activity";
-import {
-  Button,
-  Card,
-  CopyButton,
-  Group,
-  Modal,
-  Stack,
-  Text,
-  UnstyledButton,
-} from "@mantine/core";
+import type { z } from "zod";
+import type { activitySchema } from "@/server/api/schemas/activity";
+import { Button, Card, Group, Modal, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import moment from "moment";
 import { use, useState } from "react";
 import { CodeSubmitForm } from "./code-submit-form";
-import { notifications } from "@mantine/notifications";
 import { CodesView } from "@/app/_components/codes-view";
 import { CopyButtonWithNotification } from "@/app/_components/copy-button";
 
@@ -91,29 +81,30 @@ export function EventList({
                   <Text>{event.reference}</Text>
                   <CopyButtonWithNotification toCopy={event.id} />
                 </Stack>
-                <Button
-                  variant="filled"
-                  color="grape"
-                  ml={"auto"}
-                  onClick={() => {
-                    setModalActivity(event.id);
-                    openCodesModal();
-                  }}
-                  disabled={!(event.checkinCodes.length > 0)}
-                >
-                  View Codes
-                </Button>
-                <Button
-                  variant="filled"
-                  color="grape"
-                  onClick={() => {
-                    setModalActivity(event.id);
-                    openSubmitModal();
-                  }}
-                  disabled={!isCurrent}
-                >
-                  Submit Code
-                </Button>
+                <Group ml={"auto"}>
+                  <Button
+                    variant="filled"
+                    color="grape"
+                    onClick={() => {
+                      setModalActivity(event.id);
+                      openCodesModal();
+                    }}
+                    disabled={!(event.checkinCodes.length > 0)}
+                  >
+                    View Codes
+                  </Button>
+                  <Button
+                    variant="filled"
+                    color="grape"
+                    onClick={() => {
+                      setModalActivity(event.id);
+                      openSubmitModal();
+                    }}
+                    disabled={!isCurrent}
+                  >
+                    Submit Code
+                  </Button>
+                </Group>
               </Group>
             </Card>
           );

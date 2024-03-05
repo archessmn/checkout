@@ -4,10 +4,8 @@ import { AppShell, Burger, Group, NavLink } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { ThemeSwitcher } from "../theme-switcher";
 import { LuBook, LuCalendar, LuHome, LuWrench } from "react-icons/lu";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { getSession } from "next-auth/react";
-import { use } from "react";
 
 export function GenericAppShell(props: { children: React.ReactNode }) {
   const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
@@ -72,9 +70,16 @@ export function GenericAppShell(props: { children: React.ReactNode }) {
           href={"/admin"}
           leftSection={<LuWrench size="1rem" />}
           label="Admin Stuff"
-          onClick={toggleMobile}
           active={pathname === "/admin"}
-        />
+        >
+          <NavLink
+            component={Link}
+            href={"/admin/timetable/upload"}
+            label="Upload Timetable"
+            onClick={toggleMobile}
+            active={pathname === "/admin/timetable/upload"}
+          />
+        </NavLink>
 
         <ThemeSwitcher className={"mt-auto"} />
       </AppShell.Navbar>

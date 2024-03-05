@@ -6,6 +6,22 @@ await import("./src/env.js");
 
 /** @type {import("next").NextConfig} */
 const config = {
+  images: {
+    remotePatterns: [
+      {
+        hostname: "is1-ssl.mzstatic.com",
+        protocol: "https",
+      },
+      {
+        hostname: "apps.apple.com",
+        protocol: "https",
+      },
+      {
+        hostname: "tools.applemediaservices.com",
+        protocol: "https",
+      },
+    ],
+  },
   async headers() {
     return [
       {

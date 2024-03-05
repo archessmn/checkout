@@ -43,7 +43,23 @@ const getCode = {
   }),
   output: z.object({
     ok: z.boolean(),
+    score: z.number(),
     code: z.string().nullable(),
+  }),
+};
+
+const getAllCodes = {
+  input: z.object({
+    activityId: z.string(),
+  }),
+  output: z.object({
+    ok: z.boolean(),
+    codes: z.array(
+      z.object({
+        score: z.number(),
+        code: z.string(),
+      }),
+    ),
   }),
 };
 
@@ -195,6 +211,7 @@ const getDayActivities = {
 
 export const activitySchema = {
   getCode,
+  getAllCodes,
   getId,
   postTimetableCsv,
   create,

@@ -1,17 +1,8 @@
 "use client";
 
-import {
-  TextInput,
-  Checkbox,
-  Button,
-  Group,
-  Box,
-  FileInput,
-  Textarea,
-} from "@mantine/core";
+import { Button, Group, Box, FileInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
-import { CodeHighlight } from "@mantine/code-highlight";
 import { z } from "zod";
 import { zodResolver } from "mantine-form-zod-resolver";
 import { api } from "@/trpc/react";
@@ -28,15 +19,10 @@ export function TimetableUploadForm() {
         file: z.any(),
       }),
     ),
-
-    // onValuesChange: () => {
-    //   form.validate();
-    // },
   });
 
   const sayHello = api.activity.postTimetableCsv.useMutation();
   const [value, setValue] = useState<File | null>(null);
-  const [fileText, setFileText] = useState<string | null>(null);
 
   return (
     <Box maw={340} mx="auto">
@@ -67,10 +53,6 @@ export function TimetableUploadForm() {
           accept="text/csv"
           onChange={async (payload) => {
             setValue(payload);
-            const text = await value?.text();
-            if (text) {
-              setFileText(text);
-            }
           }}
         />
 

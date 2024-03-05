@@ -11,5 +11,5 @@ export const openApiDocument = generateOpenApiDocument(appRouter, {
   version: process.env.npm_package_version ?? "uh_oh",
   baseUrl: `${env.PUBLIC_URL}/api`,
   docsUrl: "https://github.com/jlalmes/trpc-openapi",
-  // tags: ["auth", "users", "posts"],
+  tags: ["activities", "codes"],
 });

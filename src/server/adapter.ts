@@ -2,12 +2,10 @@ import type { PrismaClient, Prisma } from "@prisma/client";
 import type {
   Adapter,
   AdapterAccount,
-  AdapterAuthenticator,
   AdapterSession,
   AdapterUser,
 } from "@auth/core/adapters";
 
-import NextAuth from "next-auth";
 // import { PrismaAdapter } from "@next-auth/prisma-adapter";
 // export { handlers, auth, signIn, signOut } = NextAuth({
 //   adapter: PrismaAdapter(prisma),

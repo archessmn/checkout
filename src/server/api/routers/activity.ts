@@ -1,4 +1,4 @@
-import { string, z } from "zod";
+import { z } from "zod";
 
 import {
   createTRPCRouter,
@@ -7,12 +7,18 @@ import {
 } from "@/server/api/trpc";
 import moment from "moment";
 import { activitySchema } from "../schemas/activity";
-import { ModuleGroup } from "@prisma/client";
+import type { ModuleGroup } from "@prisma/client";
 import { db } from "@/server/db";
 
 export const activityRouter = createTRPCRouter({
   getCode: publicProcedure
-    .meta({ openapi: { method: "GET", path: "/activity/code" } })
+    .meta({
+      openapi: {
+        method: "GET",
+        path: "/activity/code",
+        tags: ["activities", "codes"],
+      },
+    })
     .input(activitySchema.getCode.input)
     .output(activitySchema.getCode.output)
     .query(async ({ ctx, input }) => {
@@ -28,23 +34,55 @@ export const activityRouter = createTRPCRouter({
       if (code) {
         return {
           ok: true,
+          score: code.score,
           code: code.code,
         };
       }
 
       return {
         ok: false,
+        score: -1,
         code: null,
       };
     }),
 
+  getAllCodes: publicProcedure
+    .meta({
+      openapi: {
+        method: "GET",
+        path: "/activity/{activityId}/codes",
+        tags: ["activities", "codes"],
+      },
+    })
+    .input(activitySchema.getAllCodes.input)
+    .output(activitySchema.getAllCodes.output)
+    .query(async ({ ctx, input }) => {
+      const codes = await ctx.db.checkinCode.findMany({
+        orderBy: {
+          score: "desc",
+        },
+        where: {
+          activityId: input.activityId,
+        },
+        select: {
+          code: true,
+          score: true,
+        },
+      });
+
+      return {
+        ok: true,
+        codes,
+      };
+    }),
+
   getId: publicProcedure
-    .meta({ openapi: { method: "POST", path: "/activity/id" } })
+    .meta({
+      openapi: { method: "POST", path: "/activity/id", tags: ["activities"] },
+    })
     .input(activitySchema.getId.input)
     .output(activitySchema.getId.output)
-    .query(async ({ ctx, input }) => {
-      const now = new Date();
-
+    .query(async ({ input }) => {
       const currentActivity = await getActivityFromExternalInput(input);
 
       if (currentActivity) {
@@ -107,7 +145,7 @@ export const activityRouter = createTRPCRouter({
           });
         }
 
-        let groupNumber = extractGroupNumber(activity.activityReference);
+        const groupNumber = extractGroupNumber(activity.activityReference);
 
         let group: ModuleGroup | undefined = undefined;
 
@@ -216,12 +254,13 @@ export const activityRouter = createTRPCRouter({
       openapi: {
         method: "GET",
         path: "/activity/by-day/{date}",
+        tags: ["activities"],
       },
     })
     .input(activitySchema.getDayActivities.input)
     .output(activitySchema.getDayActivities.filteredOutput)
     .query(async ({ ctx, input }) => {
-      const date = moment(input.date).toDate();
+      const date = moment(input.date).startOf("day").toDate();
       const endDate = moment(input.date).endOf("day").toDate();
 
       let groupId = input.groupId;
@@ -293,7 +332,13 @@ export const activityRouter = createTRPCRouter({
     }),
 
   getIdExternal: publicProcedure
-    .meta({ openapi: { method: "POST", path: "/activity/id-external" } })
+    .meta({
+      openapi: {
+        method: "POST",
+        path: "/activity/id-external",
+        tags: ["activities"],
+      },
+    })
     .input(
       z.object({
         time: z.string(),
@@ -303,19 +348,12 @@ export const activityRouter = createTRPCRouter({
       }),
     )
     .output(z.object({ ok: z.boolean(), activityId: z.string().nullable() }))
-    .query(async ({ ctx, input }) => {
+    .query(async ({ input }) => {
       const currentActivity = await getActivityFromExternalInput(input);
 
-      if (currentActivity) {
-        return {
-          ok: true,
-          activityId: currentActivity.id,
-        };
-      }
-
       return {
-        ok: false,
-        activityId: null,
+        ok: currentActivity ? true : false,
+        activityId: currentActivity ? currentActivity.id : null,
       };
     }),
 });
@@ -335,7 +373,7 @@ function extractGroupNumber(reference: string): number | null {
   return groupNum;
 }
 
-async function getActivityFromExternalInput(input: {
+export async function getActivityFromExternalInput(input: {
   activity: string;
   space: string;
 }) {

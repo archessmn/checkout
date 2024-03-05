@@ -32,6 +32,7 @@ export const env = createEnv({
     OAUTH_CLIENT_ID: z.string(),
     OAUTH_CLIENT_SECRET: z.string(),
     OAUTH_ISSUER_URL: z.string(),
+    AUTOFILL_ENABLED: z.string().default("false"),
   },
 
   /**
@@ -56,6 +57,7 @@ export const env = createEnv({
     OAUTH_CLIENT_ID: process.env.OAUTH_CLIENT_ID,
     OAUTH_CLIENT_SECRET: process.env.OAUTH_CLIENT_SECRET,
     OAUTH_ISSUER_URL: process.env.OAUTH_ISSUER_URL,
+    AUTOFILL_ENABLED: process.env.AUTOFILL_ENABLED,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially
