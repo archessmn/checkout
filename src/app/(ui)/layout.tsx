@@ -10,6 +10,7 @@ import { GenericAppShell } from "@/app/_components/app-shell/generic";
 import { theme } from "./theme";
 import { ModalsProvider } from "@mantine/modals";
 import { Notifications } from "@mantine/notifications";
+import Script from "next/script";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -24,6 +25,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <Script
+          src="https://umami.archess.mn/script.js"
+          data-website-id="27308585-e414-486a-9f4d-ddab5d1e12ee"
+        />
         <ColorSchemeScript defaultColorScheme="auto" />
       </head>
       <body className={`font-sans ${inter.variable}`}>

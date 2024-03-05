@@ -9,6 +9,9 @@ import { use, useState } from "react";
 import { CodeSubmitForm } from "./code-submit-form";
 import { CodesView } from "@/app/_components/codes-view";
 import { CopyButtonWithNotification } from "@/app/_components/copy-button";
+import { useRouter } from "next/navigation";
+import { FaArrowRight, FaEye } from "react-icons/fa";
+import { MdPassword } from "react-icons/md";
 
 export function EventList({
   events,
@@ -26,6 +29,8 @@ export function EventList({
   const [modalActivity, setModalActivity] = useState<string | null>(null);
 
   const finalEvents = use(events);
+
+  const router = useRouter();
 
   return (
     <>
@@ -90,6 +95,7 @@ export function EventList({
                       openCodesModal();
                     }}
                     disabled={!(event.checkinCodes.length > 0)}
+                    leftSection={<FaEye />}
                   >
                     View Codes
                   </Button>
@@ -101,8 +107,19 @@ export function EventList({
                       openSubmitModal();
                     }}
                     disabled={!isCurrent}
+                    leftSection={<MdPassword />}
                   >
                     Submit Code
+                  </Button>
+                  <Button
+                    variant="filled"
+                    color="grape"
+                    onClick={() => {
+                      router.push(`/activities/${event.id}`);
+                    }}
+                    rightSection={<FaArrowRight />}
+                  >
+                    View
                   </Button>
                 </Group>
               </Group>

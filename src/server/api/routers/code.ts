@@ -71,7 +71,7 @@ export const codeRouter = createTRPCRouter({
           },
           data: {
             score: {
-              increment: score ?? 1,
+              increment: score ?? 0,
             },
           },
         });

@@ -6,6 +6,7 @@ import { z } from "zod";
 import { zodResolver } from "mantine-form-zod-resolver";
 import { api } from "@/trpc/react";
 import { notifications } from "@mantine/notifications";
+import { useForceUpdate } from "@mantine/hooks";
 
 export function CodeSubmitForm({
   activityId,
@@ -28,6 +29,8 @@ export function CodeSubmitForm({
     ),
   });
 
+  const forceUpdate = useForceUpdate();
+
   const submitCode = api.code.create.useMutation();
 
   return (
@@ -40,7 +43,6 @@ export function CodeSubmitForm({
             const result = await submitCode.mutateAsync({
               code: `${form.values.code}`,
               activityId,
-              accepted: false,
             });
             notifications.show({
               title: result.ok
@@ -49,6 +51,7 @@ export function CodeSubmitForm({
               message: "Bottom Text.",
               color: result.ok ? "green" : "red",
             });
+            forceUpdate();
             if (onFormSubmit) {
               onFormSubmit();
             }

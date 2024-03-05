@@ -37,6 +37,47 @@ const csvHeaders = [
   "onlineDetails",
 ];
 
+const util = {
+  filteredOutput: z.object({
+    id: z.string(),
+    description: z.string(),
+    startDateTime: z.date(),
+    endDateTime: z.date(),
+    type: z.string(),
+    reference: z.string(),
+    weekName: z
+      .object({
+        name: z.string(),
+      })
+      .nullable(),
+    group: z
+      .object({
+        id: z.string(),
+        groupNumber: z.number(),
+      })
+      .nullable(),
+    checkinCodes: z.array(
+      z.object({
+        id: z.string(),
+        code: z.string(),
+        score: z.number(),
+      }),
+    ),
+    module: z
+      .object({
+        id: z.string(),
+        code: z.string(),
+        description: z.string().nullable(),
+        department: z
+          .object({
+            name: z.string(),
+          })
+          .nullable(),
+      })
+      .nullable(),
+  }),
+};
+
 const getCode = {
   input: z.object({
     activityId: z.string().optional(),
@@ -167,49 +208,11 @@ const getDayActivities = {
       departmentId: z.string().optional(),
     }),
   ),
-  filteredOutput: z.array(
-    z.object({
-      id: z.string(),
-      description: z.string(),
-      startDateTime: z.date(),
-      endDateTime: z.date(),
-      type: z.string(),
-      reference: z.string(),
-      weekName: z
-        .object({
-          name: z.string(),
-        })
-        .nullable(),
-      group: z
-        .object({
-          id: z.string(),
-          groupNumber: z.number(),
-        })
-        .nullable(),
-      checkinCodes: z.array(
-        z.object({
-          id: z.string(),
-          code: z.string(),
-          score: z.number(),
-        }),
-      ),
-      module: z
-        .object({
-          id: z.string(),
-          code: z.string(),
-          description: z.string().nullable(),
-          department: z
-            .object({
-              name: z.string(),
-            })
-            .nullable(),
-        })
-        .nullable(),
-    }),
-  ),
+  filteredOutput: z.array(util.filteredOutput),
 };
 
 export const activitySchema = {
+  util,
   getCode,
   getAllCodes,
   getId,

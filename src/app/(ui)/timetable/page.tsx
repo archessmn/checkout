@@ -9,10 +9,10 @@ import { DayNavigation } from "@/app/_components/day-navigation";
 export default function TimetablePage({
   searchParams,
 }: {
-  searchParams?: { date: string };
+  searchParams: { date?: string };
 }) {
   const events = api.activity.getDayActivities.query({
-    date: moment(searchParams?.date).format("YYYY-MM-DD"),
+    date: moment(searchParams.date ?? Date()).format("YYYY-MM-DD"),
   });
 
   return (

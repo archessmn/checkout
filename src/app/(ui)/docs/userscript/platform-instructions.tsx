@@ -83,9 +83,10 @@ export function IOSInstructions() {
 export function AndroidInstructions() {
   return (
     <Text>
-      Android Moment (I don&apos;t have an Android device, figure it out)
-      (I&apos;m kidding, let me know how you like installing scripts and
-      I&apos;ll update this)
+      Android Moment (You can install tampermonkey and the steps should be
+      similar to the Desktop Instructions. I don&apos;t have an Android device,
+      figure it out) (I&apos;m kidding, let me know how you like installing
+      scripts and I&apos;ll update this)
     </Text>
   );
 }
@@ -95,14 +96,19 @@ export function DesktopInstructions() {
     <Stack>
       <Text>
         One of the easiest ways to use the script is through{" "}
-        <Button
-          component={Link}
-          size="compact-sm"
-          variant="transparent"
-          href={"https://www.tampermonkey.net/"}
+        <Text
+          component="a"
+          href="https://www.tampermonkey.net/"
+          variant="gradient"
+          gradient={{
+            from: "rgba(20, 200, 255, 1)",
+            to: "rgba(20, 150, 255, 1)",
+            deg: 60,
+          }}
+          inherit
         >
           Tampermonkey
-        </Button>
+        </Text>{" "}
         , a browser extension designed for running custom scripts on websites.
         There are other ways to run scripts like these but these instructions
         focus specifically on Tampermonkey.
