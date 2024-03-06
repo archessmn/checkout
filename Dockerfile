@@ -1,10 +1,7 @@
-FROM --platform=linux/amd64 node:20-alpine AS deps
-RUN apk add --no-cache libc6-compat openssl
-WORKDIR /app
-
 ##### DEPENDENCIES
 
-FROM oven/bun:latest as base
+FROM --platform=linux/amd64 node:20-alpine AS deps
+RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
 # Install Prisma Client - remove if not using Prisma
@@ -13,52 +10,50 @@ COPY prisma ./
 
 # Install dependencies based on the preferred package manager
 
-FROM base as install
-# RUN mkdir -p /temp/dev
-# COPY package.json bun.lockb /temp/dev/
-# RUN cd /temp/dev && bun install
+COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml\* ./
 
-RUN mkdir -p /temp/prod
-COPY package.json bun.lockb /temp/prod/
-RUN cd /temp/prod && bun install
+RUN \
+    if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
+    elif [ -f package-lock.json ]; then npm ci; \
+    elif [ -f pnpm-lock.yaml ]; then yarn global add pnpm && pnpm i; \
+    else echo "Lockfile not found." && exit 1; \
+    fi
 
+##### BUILDER
 
-FROM base AS prerelease
+FROM --platform=linux/amd64 node:20-alpine AS builder
 ARG DATABASE_URL
 ARG NEXT_PUBLIC_CLIENTVAR
-COPY --from=install /temp/prod/node_modules node_modules
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# ENV NEXT_TELEMETRY_DISABLED 1
 
-ENV NODE_ENV=production
-# RUN bun test
+RUN \
+    if [ -f yarn.lock ]; then SKIP_ENV_VALIDATION=1 yarn build; \
+    elif [ -f package-lock.json ]; then SKIP_ENV_VALIDATION=1 npm run build; \
+    elif [ -f pnpm-lock.yaml ]; then yarn global add pnpm && SKIP_ENV_VALIDATION=1 pnpm run build; \
+    else echo "Lockfile not found." && exit 1; \
+    fi
 
-# RUN pwd
-# RUN ls -lh
+##### RUNNER
 
-RUN SKIP_ENV_VALIDATION=1 bun run build -- -d
+FROM --platform=linux/amd64 gcr.io/distroless/nodejs20-debian12 AS runner
+WORKDIR /app
 
-FROM base AS release
-COPY --from=install /temp/prod/node_modules node_modules
-COPY --from=prerelease /app/next.config.js ./
-COPY --from=prerelease /app/public ./public
-COPY --from=prerelease /app/package.json ./package.json
+ENV NODE_ENV production
 
-COPY --from=prerelease /app/.next/standalone ./
-COPY --from=prerelease /app/.next/static ./.next/static
+# ENV NEXT_TELEMETRY_DISABLED 1
 
-# FROM --platform=linux/amd64 gcr.io/distroless/nodejs20-debian12 AS runner
-# WORKDIR /app
+COPY --from=builder /app/next.config.js ./
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/package.json ./package.json
 
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
 
-# COPY --from=builder /app/next.config.js ./
-# COPY --from=builder /app/public ./public
-# COPY --from=builder /app/package.json ./package.json
-
-# COPY --from=builder /app/.next/standalone ./
-# COPY --from=builder /app/.next/static ./.next/static
-
-EXPOSE 3000/tcp
+EXPOSE 3000
 ENV PORT 3000
 
-CMD ["bun", "run", "server.js"]
+CMD ["server.js"]
