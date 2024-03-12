@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { use } from "react";
 import type { z } from "zod";
 
-export function ModuleList({
+export function GroupList({
   groupsPromise,
 }: {
   groupsPromise: Promise<z.infer<typeof groupSchema.db.findOne>[]>;
@@ -26,7 +26,7 @@ export function ModuleList({
               <Button
                 ml={"auto"}
                 onClick={() => {
-                  router.push(`${pathname}/${group.id}/activities`);
+                  router.push(`/groups/${group.id}/activities`);
                 }}
               >
                 View Activities

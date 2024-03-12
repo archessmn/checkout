@@ -82,10 +82,16 @@ export function ActivityView({
             </Button>
           </Group>
         </Center>
-        <Card>
-          <Title order={3}>Checkin Codes</Title>
-          <CodesView codes={activity.checkinCodes} />
-        </Card>
+        {activity.checkinCodes.length > 0 ? (
+          <Card>
+            <Title order={3}>Checkin Codes</Title>
+            <CodesView codes={activity.checkinCodes} />
+          </Card>
+        ) : (
+          <Center>
+            <Title order={3}>No codes submitted yet :(</Title>
+          </Center>
+        )}
       </Stack>
     </>
   );

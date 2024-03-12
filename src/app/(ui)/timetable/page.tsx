@@ -12,14 +12,14 @@ export default function TimetablePage({
   searchParams: { date?: string };
 }) {
   const events = api.activity.getDayActivities.query({
-    date: moment(searchParams.date ?? Date()).format("YYYY-MM-DD"),
+    date: moment(searchParams.date ?? new Date()).format("YYYY-MM-DD"),
   });
 
   return (
     <Stack>
       <Center>
         <Title>
-          {moment(searchParams?.date ?? Date()).format("dddd Mo MMMM YYYY")}
+          {moment(searchParams?.date ?? new Date()).format("dddd Mo MMMM YYYY")}
         </Title>
       </Center>
       <Center>

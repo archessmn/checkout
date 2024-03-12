@@ -4,6 +4,7 @@ import { AppShell, Burger, Group, NavLink } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { ThemeSwitcher } from "../theme-switcher";
 import { LuBook, LuCalendar, LuHome, LuWrench } from "react-icons/lu";
+import { IoLogoJavascript } from "react-icons/io5";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 
@@ -48,6 +49,14 @@ export function GenericAppShell(props: { children: React.ReactNode }) {
           label="Home"
           onClick={toggleMobile}
           active={pathname === "/"}
+        />
+        <NavLink
+          component={Link}
+          href={"/docs/userscript"}
+          leftSection={<IoLogoJavascript size="1rem" />}
+          label="Userscript Docs"
+          onClick={toggleMobile}
+          active={pathname === "/docs/userscript"}
         />
         <NavLink
           component={Link}

@@ -11,11 +11,11 @@ export default function TimetablePage({
   searchParams,
   params,
 }: {
-  searchParams?: { date: string };
+  searchParams: { date?: string };
   params: { moduleId: string; groupId: string };
 }) {
   const events = api.activity.getDayActivities.query({
-    date: moment(searchParams?.date).format("YYYY-MM-DD"),
+    date: moment(searchParams.date ?? new Date()).format("YYYY-MM-DD"),
     groupId: params.groupId,
     moduleId: params.moduleId,
   });

@@ -11,7 +11,9 @@ export function ModuleList({
 }: {
   modulesPromise: Promise<z.infer<typeof moduleSchema.db.findOne>[]>;
 }) {
-  const modules = use(modulesPromise);
+  const modules = use(modulesPromise).sort((a, b) =>
+    a.code > b.code ? 1 : -1,
+  );
 
   const pathname = usePathname();
   const router = useRouter();
@@ -31,6 +33,13 @@ export function ModuleList({
                 }}
               >
                 View Groups
+              </Button>
+              <Button
+                onClick={() => {
+                  router.push(`${pathname}/${moduleBeans.id}`);
+                }}
+              >
+                View
               </Button>
             </Group>
           </Card>
