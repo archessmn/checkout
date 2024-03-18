@@ -15,7 +15,6 @@ import { z } from "zod";
 
 const codesSchema = z.array(
   z.object({
-    id: z.string(),
     code: z.string(),
     score: z.number(),
   }),
@@ -60,7 +59,7 @@ export function CodesView({ codes }: { codes: z.infer<typeof codesSchema> }) {
                 const formattedCode = code.code.padStart(6, "0");
 
                 return (
-                  <Table.Tr key={code.id}>
+                  <Table.Tr key={code.code}>
                     <Table.Td>
                       <CopyButton value={formattedCode}>
                         {({ copied, copy }) => (

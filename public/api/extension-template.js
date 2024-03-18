@@ -39,8 +39,22 @@ async function getInternalActivity(input) {
   return response.json();
 }
 
+async function getExternalActivity(input) {
+  const response = await fetch(`${env.PUBLIC_URL}/api/activity/ext/id`, {
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    method: "POST",
+    body: JSON.stringify({ ...input, date: new Date() }),
+    mode: "cors",
+  });
+
+  return response.json();
+}
+
 async function getHighestCode(activityId) {
-  return fetch(`${env.PUBLIC_URL}/api/activity/code?activityId=${activityId}`, {
+  return fetch(`${env.PUBLIC_URL}/api/activity/${activityId}/highest-code`, {
     headers: {
       Accept: "application/json",
     },
@@ -50,7 +64,7 @@ async function getHighestCode(activityId) {
 }
 
 async function getAllCodes(activityId) {
-  return fetch(`${env.PUBLIC_URL}/api/activity/${activityId}/codes`, {
+  return fetch(`${env.PUBLIC_URL}/api/activity/ext/${activityId}/all-codes`, {
     headers: {
       Accept: "application/json",
     },
@@ -100,13 +114,16 @@ async function getRejectCodes(activityId) {
     await fetch("https://rejectdopamine.com/api/app/active/yrk/cs/1")
   ).json();
 
+  // console.log(rejectCodes);
+
   let finalCodes = [];
 
   if (rejectCodes.sessionCount > 0) {
     // Get the wanted activity from rejectdopamines active sessions
     const rejectActivity = rejectCodes.sessions.find((activity) => {
       return (
-        activity.description.includes(localActivity.activity) &&
+        (activity.description.includes(localActivity.activity) ||
+          localActivity.space.includes(activity.location)) &&
         localActivity.time == `${activity.startTime} - ${activity.endTime}`
       );
     });
@@ -136,6 +153,7 @@ async function submitCode({ code, accepted, activityId }) {
       code: code,
       accepted: accepted,
       activityId: activityId,
+      offTimetable: true,
     }),
     mode: "cors",
   });
@@ -220,7 +238,7 @@ async function preInput(localId, backendId) {
   if (AUTOFILL_ENABLED == true) {
     const highestCode = await (await getHighestCode(backendId)).json();
 
-    console.log(highestCode);
+    // console.log(highestCode);
 
     if (highestCode.ok && highestCode.score >= 0) {
       return codeSubmitted(highestCode.code, localId, backendId, true);
@@ -231,29 +249,23 @@ async function preInput(localId, backendId) {
 
   let finalCodes = codes.codes;
 
-  const rejectCodes = await getRejectCodes(backendId);
+  // const rejectCodes = await getRejectCodes(backendId);
 
-  // const devCodes = rejectCodes.concat([
-  //   { code: "696969", score: 2 },
-  //   { code: "696968", score: 0 },
-  //   { code: "862885", score: 3 },
-  // ]);
+  // rejectCodes.map((rc) => {
+  //   const exisitingCode = finalCodes.find((code) => code.code == rc.code);
 
-  rejectCodes.map((rc) => {
-    const exisitingCode = finalCodes.find((code) => code.code == rc.code);
-
-    if (exisitingCode) {
-      finalCodes[finalCodes.indexOf(exisitingCode)].score += rc.score;
-    } else {
-      finalCodes.push(rc);
-    }
-  });
+  //   if (exisitingCode) {
+  //     finalCodes[finalCodes.indexOf(exisitingCode)].score += rc.score;
+  //   } else {
+  //     finalCodes.push(rc);
+  //   }
+  // });
 
   finalCodes = finalCodes.sort((one, two) => {
     return one.score < two.score ? 1 : -1;
   });
 
-  // console.log(finalCodes);
+  console.log(finalCodes);
 
   console.log("Autofill unavailable or disabled, opening input");
   if (codes.codes.length > 0) {
@@ -341,13 +353,16 @@ async function onPageReady() {
   for (const activity of activities) {
     const internalActivity = await getInternalActivity(activity);
 
+    const externalActivity = await getExternalActivity(activity);
+    console.log(externalActivity);
+
     const activityBlock = $(`section[data-activities-id="${activity.id}"]`);
     const textBlock = activityBlock.find(".text-block");
 
     if (textBlock.find("div.selfregistration_status_undetermined").length > 0) {
       textBlock.append(`
         <div class="selfregistration_status selfregistration_checkout">
-          <button type="button" class="btn btn-success selfregistration-checkout" data-targetstatus="checkout" data-activity-id="${internalActivity.activityId}">
+          <button type="button" class="btn btn-success selfregistration-checkout" data-targetstatus="checkout" data-activity-id="${externalActivity.externalId}">
             <span class="font-icon font-icon-ok"></span>
             Checkout
           </button>
@@ -383,6 +398,12 @@ async function onPageReady() {
   //     <button type="button" class="btn btn-success selfregistration-checkout" data-targetstatus="checkout" data-activity-id="clsw584b6001bu4l231nlmfct">
   //       <span class="font-icon font-icon-ok"></span>
   //       Two Codes Demo
+  //     </button>
+  //   </section>
+  //   <section data-activities-id="testing3">
+  //     <button type="button" class="btn btn-success selfregistration-checkout" data-targetstatus="checkout" data-activity-id="cltirewow000acsfoz9d3chj5">
+  //       <span class="font-icon font-icon-ok"></span>
+  //       New API Demo
   //     </button>
   //   </section>
   // `);

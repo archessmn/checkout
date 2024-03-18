@@ -2,7 +2,7 @@
 
 import type { groupSchema } from "@/server/api/schemas/group";
 import { Button, Card, Group, Stack, Text } from "@mantine/core";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { use } from "react";
 import type { z } from "zod";
 
@@ -14,7 +14,6 @@ export function GroupList({
   const groups = use(groupsPromise);
 
   const router = useRouter();
-  const pathname = usePathname();
 
   return (
     <Stack>

@@ -1,7 +1,6 @@
 import { generateOpenApiDocument } from "trpc-openapi";
 
 import { appRouter } from "./root";
-import { env } from "@/env";
 
 // Generate OpenAPI schema document
 export const openApiDocument = generateOpenApiDocument(appRouter, {
@@ -9,7 +8,7 @@ export const openApiDocument = generateOpenApiDocument(appRouter, {
   description:
     "OpenAPI compliant REST API built using tRPC with Next.js, there is no guarantee that these routes will remain the same as this project is still in development.",
   version: process.env.npm_package_version ?? "uh_oh",
-  baseUrl: `${env.PUBLIC_URL}/api`,
+  baseUrl: `${process.env.PUBLIC_URL}/api`,
   docsUrl: "https://github.com/jlalmes/trpc-openapi",
   tags: ["activities", "codes"],
 });

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import type { z } from "zod";
 
 import {
   createTRPCRouter,
@@ -15,7 +15,7 @@ export const activityRouter = createTRPCRouter({
     .meta({
       openapi: {
         method: "GET",
-        path: "/activity/code",
+        path: "/activity/{activityId}/highest-code",
         tags: ["activities", "codes"],
       },
     })
@@ -83,7 +83,7 @@ export const activityRouter = createTRPCRouter({
     .input(activitySchema.getId.input)
     .output(activitySchema.getId.output)
     .query(async ({ input }) => {
-      const currentActivity = await getActivityFromExternalInput(input);
+      const currentActivity = await getInternalActivityFromInput(input);
 
       if (currentActivity) {
         return {
@@ -303,16 +303,6 @@ export const activityRouter = createTRPCRouter({
               groupNumber: true,
             },
           },
-          checkinCodes: {
-            select: {
-              id: true,
-              code: true,
-              score: true,
-            },
-            orderBy: {
-              score: "desc",
-            },
-          },
           module: {
             select: {
               id: true,
@@ -328,7 +318,14 @@ export const activityRouter = createTRPCRouter({
         },
       });
 
-      return dayActivities;
+      const finalActivities = await Promise.all(
+        dayActivities.map(async (activity) => {
+          const codes = await getAllInternalCodes(activity.id);
+          return { ...activity, checkinCodes: codes };
+        }),
+      );
+
+      return finalActivities;
     }),
 
   getIdExternal: publicProcedure
@@ -337,26 +334,167 @@ export const activityRouter = createTRPCRouter({
         method: "POST",
         path: "/activity/id-external",
         tags: ["activities"],
+        deprecated: true,
       },
     })
-    .input(
-      z.object({
-        time: z.string(),
-        activity: z.string(),
-        lecturer: z.string(),
-        space: z.string(),
-      }),
-    )
-    .output(z.object({ ok: z.boolean(), activityId: z.string().nullable() }))
+    .input(activitySchema.getIdExternal.input)
+    .output(activitySchema.getIdExternal.output)
     .query(async ({ input }) => {
-      const currentActivity = await getActivityFromExternalInput(input);
+      const currentActivity = await getInternalActivityFromInput(input);
 
       return {
         ok: currentActivity ? true : false,
         activityId: currentActivity ? currentActivity.id : null,
       };
     }),
+
+  externalActivityFlow: publicProcedure
+    .meta({
+      openapi: {
+        path: "/activity/ext/id",
+        method: "POST",
+        tags: ["activities"],
+      },
+    })
+    .input(activitySchema.externalActivityFlow.input)
+    .output(activitySchema.externalActivityFlow.output)
+    .mutation(async ({ input, ctx }) => {
+      const exisitingExternal = await getExternalActivityFromInput(input);
+
+      if (exisitingExternal) {
+        return {
+          externalId: exisitingExternal.id,
+        };
+      }
+
+      const existingInternal = await getInternalActivityFromInput(input);
+
+      const newExternal = await ctx.db.externalActivity.create({
+        data: {
+          activity: input.activity,
+          lecturer: input.lecturer,
+          space: input.space,
+          time: input.time,
+          date: moment(input.date).startOf("day").toDate(),
+
+          internalActivity: existingInternal
+            ? { connect: { id: existingInternal?.id } }
+            : undefined,
+        },
+      });
+
+      return {
+        externalId: newExternal.id,
+      };
+    }),
+
+  externalAllCodes: publicProcedure
+    .meta({
+      openapi: {
+        path: "/activity/ext/{externalId}/all-codes",
+        method: "GET",
+        tags: ["codes"],
+        description: "Returns codes from all 3 backends.",
+      },
+    })
+    .input(activitySchema.externalCodes.input)
+    .output(activitySchema.externalCodes.output)
+    .query(async ({ input }) => {
+      const externalActivity = await getExternalActivity(input.externalId);
+
+      if (!externalActivity) {
+        return {
+          ok: false,
+          codes: [],
+        };
+      }
+
+      // Fetch all codes from internal activity if it has been linked
+      let finalCodes: z.infer<typeof activitySchema.util.codeType>[];
+
+      if (externalActivity.internalActivityId) {
+        finalCodes = await getAllInternalCodes(
+          externalActivity.internalActivityId,
+          input.externalId,
+        );
+      } else {
+        finalCodes = externalActivity.checkinCodes;
+      }
+
+      // Logic for fetching ACI and Reject Codes pls
+
+      const rejectCodes = await getRejectCodes(externalActivity);
+
+      rejectCodes.map((rc) => {
+        const exisitingCode = finalCodes.find((code) => code.code == rc.code);
+
+        if (exisitingCode) {
+          finalCodes[finalCodes.indexOf(exisitingCode)]!.score += rc.score;
+        } else {
+          finalCodes.push(rc);
+        }
+      });
+
+      const aciCodes = await getAciCodes(externalActivity);
+
+      aciCodes.map((rc) => {
+        const exisitingCode = finalCodes.find((code) => code.code == rc.code);
+
+        if (exisitingCode) {
+          finalCodes[finalCodes.indexOf(exisitingCode)]!.score += rc.score;
+        } else {
+          finalCodes.push(rc);
+        }
+      });
+
+      finalCodes = finalCodes.sort((one, two) => {
+        return one.score < two.score ? 1 : -1;
+      });
+
+      return { ok: true, codes: finalCodes };
+    }),
+
+  externalCodes: publicProcedure
+    .meta({
+      openapi: {
+        path: "/activity/ext/{externalId}/codes",
+        method: "GET",
+        tags: ["codes"],
+        description: "Returns codes from just this backend.",
+      },
+    })
+    .input(activitySchema.externalCodes.input)
+    .output(activitySchema.externalCodes.output)
+    .query(async ({ input }) => {
+      const externalActivity = await getExternalActivity(input.externalId);
+
+      if (!externalActivity) {
+        return {
+          ok: false,
+          codes: [],
+        };
+      }
+
+      let finalCodes: z.infer<typeof activitySchema.util.codeType>[];
+
+      if (externalActivity.internalActivityId) {
+        finalCodes = await getAllInternalCodes(
+          externalActivity.internalActivityId,
+          input.externalId,
+        );
+      } else {
+        finalCodes = externalActivity.checkinCodes;
+      }
+
+      finalCodes = finalCodes.sort((one, two) => {
+        return one.score < two.score ? 1 : -1;
+      });
+
+      return { ok: true, codes: finalCodes };
+    }),
 });
+
+// Utility functions below
 
 function extractGroupNumber(reference: string): number | null {
   let groupNum: number | null = null;
@@ -373,7 +511,7 @@ function extractGroupNumber(reference: string): number | null {
   return groupNum;
 }
 
-export async function getActivityFromExternalInput(input: {
+export async function getInternalActivityFromInput(input: {
   activity: string;
   space: string;
 }) {
@@ -397,4 +535,196 @@ export async function getActivityFromExternalInput(input: {
   });
 
   return currentActivity;
+}
+
+async function getExternalActivityFromInput(
+  input: z.infer<typeof activitySchema.externalActivityFlow.input>,
+) {
+  const externalDate = moment(input.date).startOf("day").toDate();
+
+  const exisitingExternal = await db.externalActivity.findFirst({
+    where: {
+      activity: input.activity,
+      space: input.space,
+      time: input.time,
+      date: externalDate,
+    },
+  });
+
+  return exisitingExternal;
+}
+
+async function getAllInternalCodes(internalId: string, externalId?: string) {
+  const internalActivity = await db.activity.findFirst({
+    where: {
+      id: internalId,
+    },
+    select: {
+      checkinCodes: {
+        select: {
+          code: true,
+          score: true,
+        },
+      },
+      externalActivities: {
+        where: {
+          id: {
+            not: {
+              equals: externalId,
+            },
+          },
+          internalActivityId: {
+            not: {
+              equals: !externalId ? internalId : undefined,
+            },
+          },
+        },
+        select: {
+          checkinCodes: {
+            select: {
+              code: true,
+              score: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!internalActivity) {
+    return [];
+  }
+
+  let finalCodes: z.infer<typeof activitySchema.util.codeType>[] = [];
+
+  internalActivity?.checkinCodes.map((intCode) => {
+    const exisitingCode = finalCodes.find((code) => intCode.code === code.code);
+
+    if (exisitingCode) {
+      finalCodes[finalCodes.indexOf(exisitingCode)]!.score += intCode.score;
+    } else {
+      finalCodes.push(intCode);
+    }
+  });
+
+  internalActivity.externalActivities.map((activity) => {
+    activity.checkinCodes.map((code) => {
+      console.log(finalCodes);
+      const exisitingCode = finalCodes.find(
+        (ffsCode) => ffsCode.code === code.code,
+      );
+
+      if (exisitingCode) {
+        finalCodes[finalCodes.indexOf(exisitingCode)]!.score += code.score;
+      } else {
+        finalCodes.push(code);
+      }
+    });
+  });
+
+  finalCodes = finalCodes.sort((one, two) => {
+    return one.score < two.score ? 1 : -1;
+  });
+
+  return finalCodes;
+}
+
+async function getExternalActivity(externalId: string) {
+  return db.externalActivity.findFirst({
+    where: {
+      id: externalId,
+    },
+    select: {
+      activity: true,
+      lecturer: true,
+      space: true,
+      time: true,
+      date: true,
+      internalActivityId: true,
+      checkinCodes: {
+        select: {
+          code: true,
+          score: true,
+        },
+      },
+    },
+  });
+}
+
+async function getRejectCodes(
+  externalActivity: z.infer<typeof activitySchema.externalCodes.activitySearch>,
+) {
+  const rejectResponse = await fetch(
+    "https://rejectdopamine.com/api/app/active/yrk/cs/1",
+  );
+
+  const rejectResponseSafe = activitySchema.rejectResponses.appActive.safeParse(
+    await rejectResponse.json(),
+  );
+
+  if (!rejectResponseSafe.success) {
+    return [];
+  }
+
+  const finalCodes: z.infer<typeof activitySchema.util.codeType>[] = [];
+
+  if (rejectResponseSafe.data.sessionCount > 0) {
+    // Get the wanted activity from rejectdopamines active sessions
+    const rejectActivity = rejectResponseSafe.data.sessions.find(
+      (activity) =>
+        (activity.description.includes(externalActivity.activity) ||
+          externalActivity.space.includes(activity.location)) &&
+        externalActivity.time == `${activity.startTime} - ${activity.endTime}`,
+    );
+
+    // console.log(rejectActivity);
+
+    if (!rejectActivity) {
+      return finalCodes;
+    }
+
+    rejectActivity.codes.map((code) => {
+      finalCodes.push({ code: `${code.checkinCode}`, score: code.count });
+    });
+  }
+
+  return finalCodes;
+}
+
+async function getAciCodes(
+  externalActivity: z.infer<typeof activitySchema.externalCodes.activitySearch>,
+) {
+  const aciResponse = await fetch("https://aci-api.ashhhleyyy.dev/api/codes", {
+    headers: {
+      "User-Agent": "Checkout Backend :3",
+    },
+  });
+
+  const aciResponseSafe = activitySchema.aciResponses.codes.safeParse(
+    await aciResponse.json(),
+  );
+
+  if (!aciResponseSafe.success) {
+    console.log("Aci validation failed");
+    return [];
+  }
+
+  // console.log(aciResponseSafe.data);
+
+  let finalCodes: z.infer<typeof activitySchema.util.codeType>[] = [];
+
+  // console.log(externalActivity);
+
+  const aciActivity = aciResponseSafe.data.activities.find(
+    (activity) =>
+      (activity.activity == externalActivity.activity ||
+        activity.space == externalActivity.space) &&
+      activity.time == externalActivity.time,
+  );
+
+  if (aciActivity) {
+    finalCodes = finalCodes.concat(aciActivity.codes);
+  }
+
+  return finalCodes;
 }

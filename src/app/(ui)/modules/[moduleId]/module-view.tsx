@@ -1,9 +1,10 @@
-import { BackButton } from "@/app/_components/back-button";
-import { moduleSchema } from "@/server/api/schemas/module";
 import { Center, Group, Stack, Title } from "@mantine/core";
 import { use } from "react";
-import { z } from "zod";
-import { GroupList } from "../../../_components/group-list";
+import { BackButton } from "@/app/_components/back-button";
+import { GroupList } from "@/app/_components/group-list";
+
+import type { moduleSchema } from "@/server/api/schemas/module";
+import type { z } from "zod";
 
 export function ModuleView({
   modulePromise,

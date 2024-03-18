@@ -42,24 +42,24 @@ export const postRouter = createTRPCRouter({
     return "you can now see this secret message!";
   }),
 
-  getAciCodes: protectedProcedure
-    .meta({
-      /* 👉 */ openapi: { method: "GET", path: "/aci/codes", enabled: true },
-    })
-    .input(z.void())
-    .output(z.any())
-    .query(async () => {
-      const aciCodesResponse = await fetch(
-        "https://aci-api.ashhhleyyy.dev/api/codes",
-        {
-          headers: {
-            "User-Agent": "",
-          },
-        },
-      );
+  // getAciCodes: protectedProcedure
+  //   .meta({
+  //     /* 👉 */ openapi: { method: "GET", path: "/aci/codes", enabled: false },
+  //   })
+  //   .input(z.void())
+  //   .output(z.any())
+  //   .query(async () => {
+  //     const aciCodesResponse = await fetch(
+  //       "https://aci-api.ashhhleyyy.dev/api/codes",
+  //       {
+  //         headers: {
+  //           "User-Agent": "",
+  //         },
+  //       },
+  //     );
 
-      const aciCodes = await aciCodesResponse.json();
+  //     const aciCodes = await aciCodesResponse.json();
 
-      // return aciCodes;
-    }),
+  //     // return aciCodes;
+  //   }),
 });

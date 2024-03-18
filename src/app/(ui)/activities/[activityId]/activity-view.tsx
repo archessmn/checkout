@@ -1,9 +1,5 @@
 "use client";
 
-import { BackButton } from "@/app/_components/back-button";
-import { CodeSubmitForm } from "@/app/_components/code-submit-form";
-import { CodesView } from "@/app/_components/codes-view";
-import { activitySchema } from "@/server/api/schemas/activity";
 import {
   Button,
   Card,
@@ -15,8 +11,14 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import moment from "moment";
-import { use, useState } from "react";
-import { z } from "zod";
+import { use } from "react";
+
+import { BackButton } from "@/app/_components/back-button";
+import { CodeSubmitForm } from "@/app/_components/code-submit-form";
+import { CodesView } from "@/app/_components/codes-view";
+
+import type { activitySchema } from "@/server/api/schemas/activity";
+import type { z } from "zod";
 
 export function ActivityView({
   activityPromise,

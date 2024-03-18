@@ -65,7 +65,11 @@ export const authOptions: NextAuthOptions = {
         authorization_signed_response_alg: "ES256",
         id_token_signed_response_alg: "ES256",
       },
-      profile(profile, tokens) {
+      profile(profile: {
+        sub: string;
+        name: string | undefined;
+        email: string;
+      }) {
         return {
           id: profile.sub,
           name: profile?.name,

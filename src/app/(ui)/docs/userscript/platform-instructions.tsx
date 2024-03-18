@@ -6,8 +6,7 @@ import {
   UserscriptIcon,
 } from "@/app/_components/apple/appstore-userscript-download";
 import { DownloadUserscript } from "@/app/_components/download-userscript";
-import { Button, Group, List, Stack, Text } from "@mantine/core";
-import Link from "next/link";
+import { Group, List, Stack, Text } from "@mantine/core";
 
 export function IOSInstructions() {
   return (

@@ -58,7 +58,6 @@ const util = {
       .nullable(),
     checkinCodes: z.array(
       z.object({
-        id: z.string(),
         code: z.string(),
         score: z.number(),
       }),
@@ -76,11 +75,20 @@ const util = {
       })
       .nullable(),
   }),
+  codeType: z.object({
+    code: z.string(),
+    score: z.number(),
+  }),
+  codeTypeId: z.object({
+    id: z.string(),
+    code: z.string(),
+    score: z.number(),
+  }),
 };
 
 const getCode = {
   input: z.object({
-    activityId: z.string().optional(),
+    activityId: z.string(),
   }),
   output: z.object({
     ok: z.boolean(),
@@ -211,6 +219,100 @@ const getDayActivities = {
   filteredOutput: z.array(util.filteredOutput),
 };
 
+const getIdExternal = {
+  input: z.object({
+    time: z.string(),
+    activity: z.string(),
+    lecturer: z.string(),
+    space: z.string(),
+  }),
+  output: z.object({ ok: z.boolean(), activityId: z.string().nullable() }),
+};
+
+const externalActivityFlow = {
+  input: z.object({
+    activity: z.string(),
+    lecturer: z.string().optional(),
+    space: z.string(),
+    time: z.string(),
+    date: z.date(),
+  }),
+  output: z.object({
+    externalId: z.string(),
+  }),
+};
+
+const externalCodes = {
+  input: z.object({
+    externalId: z.string(),
+  }),
+  output: z.object({
+    ok: z.boolean(),
+    codes: z.array(
+      z.object({
+        score: z.number(),
+        code: z.string(),
+      }),
+    ),
+  }),
+  activitySearch: z.object({
+    date: z.date(),
+    checkinCodes: z.array(
+      z.object({
+        code: z.string(),
+        score: z.number(),
+      }),
+    ),
+    activity: z.string(),
+    lecturer: z.string().nullable(),
+    space: z.string(),
+    time: z.string(),
+  }),
+};
+
+const rejectResponses = {
+  appActive: z.object({
+    sessionCount: z.number(),
+    msg: z.string(),
+    api: z.string(),
+    userPerms: z.string(),
+    sessions: z.array(
+      z.object({
+        startDate: z.string(),
+        startTime: z.string(),
+        endTime: z.string(),
+        description: z.string(),
+        moduleName: z.string(),
+        moduleCode: z.string(),
+        rejectID: z.number(),
+        location: z.string(),
+        codesCount: z.number(),
+        codes: z.array(
+          z.object({
+            groupCode: z.string(),
+            checkinCode: z.number(),
+            count: z.number(),
+          }),
+        ),
+      }),
+    ),
+  }),
+};
+
+const aciResponses = {
+  codes: z.object({
+    activities: z.array(
+      z.object({
+        date: z.string(),
+        time: z.string(),
+        space: z.string(),
+        activity: z.string(),
+        codes: z.array(util.codeType),
+      }),
+    ),
+  }),
+};
+
 export const activitySchema = {
   util,
   getCode,
@@ -219,4 +321,9 @@ export const activitySchema = {
   postTimetableCsv,
   create,
   getDayActivities,
+  getIdExternal,
+  externalActivityFlow,
+  externalCodes,
+  rejectResponses,
+  aciResponses,
 };

@@ -1,18 +1,33 @@
 import { z } from "zod";
 
 import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
+import { db } from "@/server/db";
 
 //TODO Move validators to  ../schemas/code.ts
 export const codeRouter = createTRPCRouter({
   create: publicProcedure
     .meta({
-      openapi: { method: "POST", path: "/code/submit", tags: ["codes"] },
+      openapi: {
+        method: "POST",
+        path: "/code/submit",
+        tags: ["codes"],
+        description:
+          "If the activityId is obtained from /api/activity/ext then offTimetable should be set to true.",
+        example: {
+          request: {
+            code: "6969",
+            activityId: "cltiv1gso006ecsfo8r7p00gh",
+            offTimetable: true,
+          },
+        },
+      },
     })
     .input(
       z.object({
         code: z.string().nullable(),
         accepted: z.boolean().optional(),
         activityId: z.string(),
+        offTimetable: z.boolean().optional(),
       }),
     )
     .output(
@@ -29,6 +44,8 @@ export const codeRouter = createTRPCRouter({
           ok: false,
         };
       }
+
+      // Activity time check
 
       // const activity = await ctx.db.activity.findFirst({
       //   where: {
@@ -49,12 +66,30 @@ export const codeRouter = createTRPCRouter({
       //   };
       // }
 
+      let internalActivityId: string | undefined = undefined;
+
+      if (input.offTimetable) {
+        const externalActivity = await db.externalActivity.findFirst({
+          where: {
+            id: input.activityId,
+          },
+          select: {
+            internalActivityId: true,
+          },
+        });
+
+        if (externalActivity) {
+          internalActivityId = externalActivity.internalActivityId ?? undefined;
+        }
+      }
+
       const inputCodeFormatted = input.code.padStart(6, "0").substring(0, 6);
 
       const code = await ctx.db.checkinCode.findFirst({
         where: {
           code: inputCodeFormatted,
-          activityId: input.activityId,
+          activityId: !input.offTimetable ? input.activityId : undefined,
+          externalActivityId: input.offTimetable ? input.activityId : undefined,
         },
       });
 
@@ -88,7 +123,14 @@ export const codeRouter = createTRPCRouter({
         data: {
           code: inputCodeFormatted,
           score: 1,
-          activity: { connect: { id: input.activityId } },
+          activity: !input.offTimetable
+            ? { connect: { id: input.activityId } }
+            : internalActivityId
+              ? { connect: { id: internalActivityId } }
+              : undefined,
+          externalActivity: input.offTimetable
+            ? { connect: { id: input.activityId } }
+            : undefined,
         },
       });
 

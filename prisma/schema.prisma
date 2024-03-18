@@ -137,6 +137,7 @@ model Activity {
     group       ModuleGroup?   @relation(fields: [groupId], references: [id])
 
     checkinCodes    CheckinCode[]   @relation()
+    externalActivities  ExternalActivity[]
 
     @@map("activities")
 }
@@ -146,8 +147,12 @@ model CheckinCode {
     code        String
     score       Int         @default(0)
     submittedAt DateTime?   @default(now())
-    activityId  String
-    activity    Activity    @relation(fields: [activityId], references: [id])
+
+    activityId  String?
+    activity    Activity?    @relation(fields: [activityId], references: [id])
+
+    externalActivityId  String?
+    externalActivity    ExternalActivity?    @relation(fields: [externalActivityId], references: [id])
 
     @@map("checkin_codes")
 }
@@ -172,4 +177,21 @@ model ModuleGroup {
     activities  Activity[]
 
     @@map("module_groups")
+}
+
+model ExternalActivity {
+    id          String      @id @default(cuid())
+    time        String
+    activity    String
+    lecturer    String?
+    space       String
+    date        DateTime
+
+    internalActivityId  String?
+    internalActivity    Activity?    @relation(fields: [internalActivityId], references: [id])
+
+    checkinCodes    CheckinCode[]
+
+
+    @@map("external_activities")
 }

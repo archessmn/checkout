@@ -19,7 +19,7 @@ export default function TimetablePage({
     <Stack>
       <Center>
         <Title>
-          {moment(searchParams?.date ?? new Date()).format("dddd Mo MMMM YYYY")}
+          {moment(searchParams?.date ?? new Date()).format("dddd Do MMMM YYYY")}
         </Title>
       </Center>
       <Center>

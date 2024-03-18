@@ -1,4 +1,3 @@
-import { EventList } from "@/app/_components/event-list";
 import { db } from "@/server/db";
 import { ActivityView } from "./activity-view";
 
