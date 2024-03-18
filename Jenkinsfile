@@ -7,7 +7,6 @@ pipeline{
   stages{
     stage('Prepare') {
       steps {
-        ciSkip action: 'check'
         script {
           def imageNamePrefix = ''
           if (env.BRANCH_NAME != 'main') {
