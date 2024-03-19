@@ -1,11 +1,11 @@
 
 def imageTag = ''
+def app
 pipeline{
   agent{
     label "docker"
   }
   stages{
-    def app
     stage('Prepare') {
       steps {
         script {
@@ -19,7 +19,9 @@ pipeline{
     }
     stage('Build Images') {
       steps {
-        app = docker.build('ghcr.io/archessmn/checkout')
+        script {
+          app = docker.build('ghcr.io/archessmn/checkout')
+        }
         // sh """docker build -t ghcr.io/archessmn/checkout:${imageTag} ."""
       }
     }
@@ -37,8 +39,11 @@ pipeline{
       steps {
         // sh "echo $GHCR_PAT | docker login ghcr.io -u archessmn --password-stdin"
         // sh "docker push ghcr.io/archessmn/checkout:${imageTag}"
-        docker.withRegistry('https://ghcr.io', 'ghcr_login') {
-          app.push('${imageTag}')
+        script {
+          docker.withRegistry('https://ghcr.io', 'ghcr_login') {
+            app.push('${imageTag}')
+          }
+
         }
       }
     }
