@@ -1,6 +1,6 @@
 
 def imageTag = ''
-def app
+// def app
 pipeline{
   agent{
     label "docker"
@@ -19,7 +19,7 @@ pipeline{
     }
     stage('Build Images') {
       steps {
-        app = docker.build('ghcr.io/archessmn/checkout')
+        def app = docker.build('ghcr.io/archessmn/checkout')
         // sh """docker build -t ghcr.io/archessmn/checkout:${imageTag} ."""
       }
     }
