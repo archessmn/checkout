@@ -1,11 +1,11 @@
 
 def imageTag = ''
+def app
 pipeline{
   agent{
     label "docker"
   }
   stages{
-    def app
     stage('Prepare') {
       steps {
         script {
