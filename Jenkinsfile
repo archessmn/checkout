@@ -22,9 +22,9 @@ pipeline{
       }
     }
     stage('Push') {
-      environment {
-        GHCR_PAT = credentials("ghcr_access_token")
-      }
+      // environment {
+      //   GHCR_PAT = credentials("ghcr_access_token")
+      // }
       when {
         anyOf {
           branch 'main'
@@ -33,7 +33,7 @@ pipeline{
         }
       }
       steps {
-        sh "echo $GHCR_PAT | docker login ghcr.io -u archessmn --password-stdin"
+        // sh "echo $GHCR_PAT | docker login ghcr.io -u archessmn --password-stdin"
         dockerPush image: 'ghcr.io/archessmn/checkout', tag: imageTag
       }
     }
