@@ -40,10 +40,9 @@ pipeline{
         // sh "echo $GHCR_PAT | docker login ghcr.io -u archessmn --password-stdin"
         // sh "docker push ghcr.io/archessmn/checkout:${imageTag}"
         script {
-          docker.withRegistry('https://ghcr.io', 'ghcr_login') {
-            app.push('${imageTag}')
+          docker.withRegistry("https://ghcr.io", "ghcr_login") {
+            app.push("${imageTag}")
           }
-
         }
       }
     }
