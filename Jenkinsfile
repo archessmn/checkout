@@ -34,7 +34,7 @@ pipeline{
       }
       steps {
         // sh "echo $GHCR_PAT | docker login ghcr.io -u archessmn --password-stdin"
-        dockerPush image: 'ghcr.io/archessmn/checkout', tag: imageTag
+        sh "docker push ghcr.io/archessmn/checkout:${imageTag}"
       }
     }
   }
