@@ -42,6 +42,9 @@ pipeline{
         script {
           docker.withRegistry("https://ghcr.io", "ghcr_login") {
             app.push("${imageTag}")
+            if (env.BRANCH_NAME == 'main') {
+              app.push('latest')
+            }
           }
         }
       }
