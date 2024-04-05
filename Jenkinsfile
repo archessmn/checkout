@@ -21,7 +21,7 @@ nomadJobTemplate(
   ]
 )
 {
-  node {
+  node(label) {
   stage('Prepare') {
 
     sh "git clone https://github.com/archessmn/checkout.git"
