@@ -22,7 +22,6 @@ nomadJobTemplate(
 )
 {
   stage('Prepare') {
-    steps {
       script {
         def imageNamePrefix = ''
         if (env.BRANCH_NAME != 'main') {
@@ -30,15 +29,12 @@ nomadJobTemplate(
         }
         imageTag = "${imageNamePrefix}${env.BUILD_NUMBER}"
       }
-    }
   }
   stage('Build Images') {
-    steps {
       script {
         app = docker.build('ghcr.io/archessmn/checkout')
       }
       // sh """docker build -t ghcr.io/archessmn/checkout:${imageTag} ."""
-    }
   }
   stage('Push') {
     // environment {
@@ -51,7 +47,6 @@ nomadJobTemplate(
         changeRequest target: 'main'
       }
     }
-    steps {
       // sh "echo $GHCR_PAT | docker login ghcr.io -u archessmn --password-stdin"
       // sh "docker push ghcr.io/archessmn/checkout:${imageTag}"
       script {
@@ -62,6 +57,5 @@ nomadJobTemplate(
           }
         }
       }
-    }
   }
 }
