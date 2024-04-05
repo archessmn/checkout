@@ -658,9 +658,16 @@ async function getRejectCodes(
     "https://rejectdopamine.com/api/app/active/yrk/cs/1",
   );
 
-  const rejectResponseSafe = activitySchema.rejectResponses.appActive.safeParse(
-    await rejectResponse.json(),
-  );
+  let rejectJson;
+
+  try {
+    rejectJson = await rejectResponse.json();
+  } catch (e) {
+    return [];
+  }
+
+  const rejectResponseSafe =
+    activitySchema.rejectResponses.appActive.safeParse(rejectJson);
 
   if (!rejectResponseSafe.success) {
     return [];
@@ -700,20 +707,21 @@ async function getAciCodes(
     },
   });
 
-  const aciResponseSafe = activitySchema.aciResponses.codes.safeParse(
-    await aciResponse.json(),
-  );
+  let aciJson;
 
-  if (!aciResponseSafe.success) {
-    console.log("Aci validation failed");
+  try {
+    aciJson = await aciResponse.json();
+  } catch (e) {
     return [];
   }
 
-  // console.log(aciResponseSafe.data);
+  const aciResponseSafe = activitySchema.aciResponses.codes.safeParse(aciJson);
+
+  if (!aciResponseSafe.success) {
+    return [];
+  }
 
   let finalCodes: z.infer<typeof activitySchema.util.codeType>[] = [];
-
-  // console.log(externalActivity);
 
   const aciActivity = aciResponseSafe.data.activities.find(
     (activity) =>
