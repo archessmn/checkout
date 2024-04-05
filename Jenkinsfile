@@ -25,6 +25,7 @@ nomadJobTemplate(
   stage('Prepare') {
 
     sh "git clone https://github.com/archessmn/checkout.git"
+    sh "cd checkout"
     sh "git checkout ${env.BRANCH_NAME}"
       script {
         def imageNamePrefix = ''
