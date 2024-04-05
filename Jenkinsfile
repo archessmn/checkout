@@ -1,11 +1,27 @@
 
 def imageTag = ''
 def app
-pipeline{
-  agent{
-    label "docker"
-  }
-  stages{
+
+def label = "my-job-${UUID.randomUUID().toString()}"
+echo "Using label ${label}"
+
+nomadJobTemplate(
+    label: label,
+    taskGroups: [
+      taskTemplate(
+        name: 'jnlp',
+        image: 'jenkins/inbound-agent:latest',
+        resourcesMemory: 2048,
+        resourcesCPU: 1000,
+        envVars: [
+            envVar(key: 'test', value: 'foobar'),
+            envVar(key: 'test123', value: 'foobar456qsd'),
+        ]
+    )
+  ]
+)
+{
+    stages{
     stage('Prepare') {
       steps {
         script {
