@@ -10,7 +10,7 @@ nomadJobTemplate(
     taskGroups: [
       taskTemplate(
         name: 'jnlp',
-        image: 'jenkins/inbound-agent:latest',
+        image: 'nazman/inbound-agent-docker:latest',
         resourcesMemory: 2048,
         resourcesCPU: 1000,
         envVars: [
