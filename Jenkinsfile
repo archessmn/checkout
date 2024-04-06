@@ -23,7 +23,7 @@ nomadJobTemplate(
 {
   node(label) {
   stage('Prepare') {
-    sh "systemctl start docke"
+    sh "dockerd"
     // sh "pwd"
     // sh "ls -a"
     sh "git clone https://github.com/archessmn/checkout.git ."
