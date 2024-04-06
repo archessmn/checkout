@@ -23,7 +23,9 @@ nomadJobTemplate(
 {
   node(label) {
   stage('Prepare') {
-    sh "dockerd"
+    // sh "dockerd"
+    sh "hostname"
+    sh "curl https://ipv4.icanhazip.com"
     // sh "pwd"
     // sh "ls -a"
     sh "git clone https://github.com/archessmn/checkout.git ."
