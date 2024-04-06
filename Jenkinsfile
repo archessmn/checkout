@@ -26,9 +26,9 @@ nomadJobTemplate(
 
     sh "pwd"
     sh "ls -a"
-    sh "git clone https://github.com/archessmn/checkout.git"
+    sh "git clone https://github.com/archessmn/checkout.git ."
     sh "ls -a"
-    sh "cd checkout"
+    // sh "cd checkout"
     sh "pwd"
     sh "ls -a"
     sh "git checkout ${env.BRANCH_NAME}"
