@@ -371,7 +371,7 @@ export const activityRouter = createTRPCRouter({
 
       let date = moment(input.date).startOf("day");
 
-      if (date.year() === 2001) date.year(moment().year());
+      if (date.year() === 2001) date = date.year(moment().year());
 
       const newExternal = await ctx.db.externalActivity.create({
         data: {
