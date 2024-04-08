@@ -369,13 +369,17 @@ export const activityRouter = createTRPCRouter({
 
       const existingInternal = await getInternalActivityFromInput(input);
 
+      let date = moment(input.date).startOf("day");
+
+      if (date.year() === 2001) date.year(moment().year());
+
       const newExternal = await ctx.db.externalActivity.create({
         data: {
           activity: input.activity,
           lecturer: input.lecturer,
           space: input.space,
           time: input.time,
-          date: moment(input.date).startOf("day").toDate(),
+          date: date.toDate(),
 
           internalActivity: existingInternal
             ? { connect: { id: existingInternal?.id } }

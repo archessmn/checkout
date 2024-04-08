@@ -71,12 +71,12 @@ export function EventList({
             moment(event.endDateTime) > moment();
 
           return (
-            <Card key={crypto.randomUUID()}>
+            <Card key={event.id}>
               <Group>
                 <Text w={140} c={isCurrent ? "" : "dimmed"}>
-                  {moment(event.startDateTime).format("HH:mm")}
+                  {moment(event.startDateTime).utc().format("HH:mm")}
                   {" - "}
-                  {moment(event.endDateTime).format("HH:mm")}
+                  {moment(event.endDateTime).utc().format("HH:mm")}
                 </Text>
                 <Stack gap={"xs"}>
                   <Text>
