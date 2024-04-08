@@ -26,19 +26,14 @@ pipeline{
       }
     }
     stage('Push') {
-      // environment {
-      //   GHCR_PAT = credentials("ghcr_access_token")
+      // when {
+      //   anyOf {
+      //     branch 'main'
+      //     tag 'v*'
+      //     changeRequest target: 'main'
+      //   }
       // }
-      when {
-        anyOf {
-          branch 'main'
-          tag 'v*'
-          changeRequest target: 'main'
-        }
-      }
       steps {
-        // sh "echo $GHCR_PAT | docker login ghcr.io -u archessmn --password-stdin"
-        // sh "docker push ghcr.io/archessmn/checkout:${imageTag}"
         script {
           docker.withRegistry("https://ghcr.io", "ghcr_login") {
             app.push("${imageTag}")
