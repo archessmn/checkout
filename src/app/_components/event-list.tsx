@@ -71,7 +71,7 @@ export function EventList({
             moment(event.endDateTime) > moment();
 
           return (
-            <Card key={event.id}>
+            <Card key={event.id} withBorder>
               <Group>
                 <Text w={140} c={isCurrent ? "" : "dimmed"}>
                   {moment(event.startDateTime).format("HH:mm")}
