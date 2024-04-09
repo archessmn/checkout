@@ -496,6 +496,22 @@ export const activityRouter = createTRPCRouter({
 
       return { ok: true, codes: finalCodes };
     }),
+  deleteFutureActivities: protectedProcedure
+    .input(activitySchema.deleteFutureActivities.input)
+    .output(activitySchema.deleteFutureActivities.output)
+    .mutation(async ({ ctx, input }) => {
+      const date = new Date();
+
+      const deletedResponse = await ctx.db.activity.deleteMany({
+        where: {
+          startDateTime: {
+            gte: date,
+          },
+        },
+      });
+
+      return { ok: true, count: deletedResponse.count };
+    }),
 });
 
 // Utility functions below

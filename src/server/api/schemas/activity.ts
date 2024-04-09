@@ -313,6 +313,14 @@ const aciResponses = {
   }),
 };
 
+const deleteFutureActivities = {
+  input: z.undefined(),
+  output: z.object({
+    ok: z.boolean(),
+    count: z.number(),
+  }),
+};
+
 export const activitySchema = {
   util,
   getCode,
@@ -326,4 +334,5 @@ export const activitySchema = {
   externalCodes,
   rejectResponses,
   aciResponses,
+  deleteFutureActivities,
 };
