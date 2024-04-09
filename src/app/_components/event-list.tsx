@@ -74,9 +74,9 @@ export function EventList({
             <Card key={event.id}>
               <Group>
                 <Text w={140} c={isCurrent ? "" : "dimmed"}>
-                  {moment(event.startDateTime).utc().format("HH:mm")}
+                  {moment(event.startDateTime).format("HH:mm")}
                   {" - "}
-                  {moment(event.endDateTime).utc().format("HH:mm")}
+                  {moment(event.endDateTime).format("HH:mm")}
                 </Text>
                 <Stack gap={"xs"}>
                   <Text>

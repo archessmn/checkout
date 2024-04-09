@@ -168,10 +168,14 @@ export const activityRouter = createTRPCRouter({
           }
         }
 
-        const startDateTime = new Date(
+        const startDateTime = moment(
           `${activity.startDate} ${activity.startTime}`,
-        );
-        const endDateTime = new Date(`${activity.endDate} ${activity.endTime}`);
+        )
+          .utc()
+          .toDate();
+        const endDateTime = moment(`${activity.endDate} ${activity.endTime}`)
+          .utc()
+          .toDate();
 
         const searchActivity = await ctx.db.activity.findFirst({
           where: {

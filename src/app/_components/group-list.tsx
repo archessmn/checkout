@@ -21,7 +21,7 @@ export function GroupList({
         return (
           <Card key={group.id}>
             <Group>
-              <Text>{group.groupNumber}</Text>
+              <Text>Group {group.groupNumber}</Text>
               <Button
                 ml={"auto"}
                 onClick={() => {
