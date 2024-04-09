@@ -15,7 +15,8 @@ export async function GET(request: Request) {
   return new Response(
     file
       .replaceAll("${env.PUBLIC_URL}", env.PUBLIC_URL)
-      .replaceAll("env.AUTOFILL_ENABLED", `${env.AUTOFILL_ENABLED}`),
+      .replaceAll("env.AUTOFILL_ENABLED", `${env.AUTOFILL_ENABLED}`)
+      .replaceAll("${process.env.NODE_ENV}", process.env.NODE_ENV),
     {
       headers: {
         "Content-Type": "text/javascript",

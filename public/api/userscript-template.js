@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Checkout Injector
-// @version      0.0.4
+// @version      0.0.5
 // @namespace    http://tampermonkey.net/
 // @description  try to take over the world!
 // @author       archessmn
@@ -19,14 +19,14 @@
   document.head.appendChild(
     ((s) => {
       s.rel = "stylesheet";
-      s.href = "https://checkout.theshrine.net/extension.css";
+      s.href = "${env.PUBLIC_URL}/extension.css";
       return s;
     })(document.createElement("link")),
   );
   document.head.appendChild(
     ((s) => {
       s.type = "text/javascript";
-      s.src = "https://checkout.theshrine.net/api/extension.js";
+      s.src = "${env.PUBLIC_URL}/api/extension.js";
       return s;
     })(document.createElement("script")),
   );

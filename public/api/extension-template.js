@@ -5,6 +5,8 @@
 // from [PUBLIC_URL]/api/extension-template.js, in which case the script is useless
 // since it doesn't have the url of the backend so probably don't do that :3
 
+const environment = `${process.env.NODE_ENV}`;
+
 function getPageActivities() {
   var activities = [];
 
@@ -341,8 +343,8 @@ function hideCheckoutModal() {
 async function onPageReady() {
   $(".page-title").text(
     window.innerWidth >= 915
-      ? "Check-In-Out-In-Out-Shake-It-All-About"
-      : "Check-Out",
+      ? `${environment === "development" ? "Dev " : ""}Check-In-Out-In-Out-Shake-It-All-About`
+      : `${environment === "development" ? "Dev " : ""}Check-Out`,
   );
 
   const activities = await getPageActivities();
