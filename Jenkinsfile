@@ -14,8 +14,8 @@ nomadJobTemplate(
         args: [
           "-v",
           "/var/run/docker.sock:/var/run/docker.sock",
-          "-c",
-          "java -jar /local/slave.jar -url $JENKINS_URL -secret $JENKINS_SECRET"
+          // "-c",
+          // "java -jar /local/slave.jar -url $JENKINS_URL -secret $JENKINS_SECRET"
         ],
         downloadAgentJar: true,
         resourcesMemory: 2048,
