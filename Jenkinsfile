@@ -17,7 +17,7 @@ nomadJobTemplate(
           // "-c",
           // "java -jar /local/slave.jar -url $JENKINS_URL -secret $JENKINS_SECRET"
         ],
-        downloadAgentJar: true,
+        // downloadAgentJar: true,
         resourcesMemory: 2048,
         resourcesCPU: 1000,
         envVars: [
