@@ -16,7 +16,7 @@ nomadJobTemplate(
           "/var/run/docker.sock:/var/run/docker.sock",
           "-c",
           "java -jar /local/slave.jar -jnlpUrl $JENKINS_JNLP_URL -secret $JENKINS_SECRET"
-        ]
+        ],
         resourcesMemory: 2048,
         resourcesCPU: 1000,
         envVars: [
