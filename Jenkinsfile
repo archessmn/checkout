@@ -13,7 +13,7 @@ nomadJobTemplate(
         image: 'nazman/inbound-agent-docker:latest',
         args: [
           "-v",
-          "/var/run/docker.sock:/var/run/docker.sock"
+          "/var/run/docker.sock:/var/run/docker.sock",
           "-c",
           "java -jar /local/slave.jar -jnlpUrl $JENKINS_JNLP_URL -secret $JENKINS_SECRET"
         ]
