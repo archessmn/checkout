@@ -6,6 +6,10 @@ import { EventList } from "../../_components/event-list";
 import { LoadingSkeleton } from "@/app/_components/loading";
 import { DayNavigation } from "@/app/_components/day-navigation";
 
+export const metadata = {
+  title: "Checkout | Timetable",
+};
+
 export default function TimetablePage({
   searchParams,
 }: {

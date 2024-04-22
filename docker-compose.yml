@@ -10,7 +10,7 @@ services:
         PUBLIC_URL: "https://checkout.theshrine.net"
     working_dir: /app
     ports:
-      - "3003:3000"
+      - "3006:3000"
     image: t3-app
     env_file:
       - .env.local

@@ -27,20 +27,6 @@ function getPageActivities() {
   return activities;
 }
 
-async function getInternalActivity(input) {
-  const response = await fetch(`${env.PUBLIC_URL}/api/activity/id-external`, {
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    },
-    method: "POST",
-    body: JSON.stringify(input),
-    mode: "cors",
-  });
-
-  return response.json();
-}
-
 async function getExternalActivity(input) {
   const response = await fetch(`${env.PUBLIC_URL}/api/activity/ext/id`, {
     headers: {
@@ -73,73 +59,6 @@ async function getAllCodes(activityId) {
     method: "GET",
     mode: "cors",
   });
-}
-
-async function getAciCodes(activityId) {
-  const localId = $(
-    `.selfregistration-checkout[data-activity-id="${activityId}"]`,
-  )
-    .closest("section[data-activities-id]:first")
-    .attr("data-activities-id");
-
-  const localActivity = getPageActivities().find(
-    (activity) => activity.id == localId,
-  );
-
-  const aciCodesResponse = await fetch(
-    "https://aci-api.ashhhleyyy.dev/api/codes",
-  );
-
-  const aciCodes = await aciCodesResponse.json();
-
-  console.log(aciCodes);
-}
-
-// Fetches currently active sessions and their codes from rejectdopamine.com
-// then filters them to find the session the user is checking in to, parses
-// and returns the codes in a format consistent with the rest of the program
-async function getRejectCodes(activityId) {
-  // Gets the activity id of the closest section containing the Checkout
-  // button clicked by the user based on the backend ID of that activity
-  const localId = $(
-    `.selfregistration-checkout[data-activity-id="${activityId}"]`,
-  )
-    .closest("section")
-    .attr("data-activities-id");
-
-  const localActivity = getPageActivities().find(
-    (activity) => activity.id == localId,
-  );
-
-  // Make the request to rejectdopamine
-  const rejectCodes = await (
-    await fetch("https://rejectdopamine.com/api/app/active/yrk/cs/1")
-  ).json();
-
-  // console.log(rejectCodes);
-
-  let finalCodes = [];
-
-  if (rejectCodes.sessionCount > 0) {
-    // Get the wanted activity from rejectdopamines active sessions
-    const rejectActivity = rejectCodes.sessions.find((activity) => {
-      return (
-        (activity.description.includes(localActivity.activity) ||
-          localActivity.space.includes(activity.location)) &&
-        localActivity.time == `${activity.startTime} - ${activity.endTime}`
-      );
-    });
-
-    if (!rejectActivity) {
-      return finalCodes;
-    }
-
-    rejectActivity.codes.map((code) => {
-      finalCodes.push({ code: `${code.checkinCode}`, score: code.count });
-    });
-  }
-
-  return finalCodes;
 }
 
 // Submits a code to the backend that provides this script, could also be adapted
@@ -353,10 +272,7 @@ async function onPageReady() {
   $("div.selfregistration_status_undetermined").addClass("hidden");
 
   for (const activity of activities) {
-    const internalActivity = await getInternalActivity(activity);
-
     const externalActivity = await getExternalActivity(activity);
-    console.log(externalActivity);
 
     const activityBlock = $(`section[data-activities-id="${activity.id}"]`);
     const textBlock = activityBlock.find(".text-block");
