@@ -11,6 +11,7 @@ nomadJobTemplate(
       taskTemplate(
         name: 'jnlp',
         image: 'nazman/inbound-agent-docker:latest',
+        command: "sh",
         args: [
           "-v",
           "/var/run/docker.sock:/var/run/docker.sock",
