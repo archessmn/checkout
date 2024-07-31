@@ -144,6 +144,7 @@ const parseCsvSchema = z.array(
     students: z.string(),
     department: z.string(),
     size: z.preprocess((input) => Number(input), z.number()),
+    isMandatory: castYesNoToBool,
     activityReference: z.string(),
     activityDetails: z.string(),
     description2: z.string(),
