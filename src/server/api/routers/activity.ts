@@ -679,7 +679,7 @@ async function getRejectCodes(
   externalActivity: z.infer<typeof activitySchema.externalCodes.activitySearch>,
 ) {
   const rejectResponse = await fetch(
-    "https://rejectdopamine.com/api/app/active/yrk/cs/1",
+    "https://checkout.ac/api/app/active/yrk/cs/1",
   );
 
   let rejectJson;
